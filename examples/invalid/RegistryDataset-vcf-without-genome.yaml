@@ -1,0 +1,7 @@
+# Invalid: a VCF must state its reference genome.
+genomic_data_files:
+  - id: rapid:genomic/0001
+    participant: rapid:participant/0001
+    file_name: proband.vcf.gz
+    file_format: VCF
+    data_category: GENOMIC

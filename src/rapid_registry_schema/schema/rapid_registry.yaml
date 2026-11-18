@@ -676,7 +676,9 @@ classes:
     attributes:
       sex:
         range: SexEnum
-        description: Administrative sex, coded as in BDCHM (OMOP).
+        description: >-
+          Administrative sex, coded as in BDCHM (OMOP). Kept alongside
+          sex_at_birth: a registry fills whichever it collects, or both.
       sex_at_birth:
         range: SexAtBirthEnum
         description: Sex assigned at birth (RD-CDM 2.2, LOINC 76689-9).
@@ -1165,6 +1167,11 @@ classes:
       drug_concept:
         range: RxNormConcept
         required: true
+        comments:
+          - >-
+            Required by design: a medication that cannot yet be coded to
+            RxNorm is held back until it is, with the source wording kept in
+            drug_name_as_reported.
         inlined: true
         description: RxNorm ingredient or clinical drug where it can be coded.
       drug_name_as_reported:
@@ -1615,7 +1622,21 @@ classes:
     is_a: DataFile
     description: >-
       A raw or processed genomic data file (BAM, CRAM, VCF, FASTQ) linked to a
-      participant.
+      participant. Aligned reads and variant calls (BAM, CRAM, VCF) must state
+      their reference genome; unaligned reads (FASTQ) need not.
+    rules:
+      - description: BAM, CRAM and VCF files must state the reference genome.
+        preconditions:
+          slot_conditions:
+            file_format:
+              any_of:
+                - equals_string: BAM
+                - equals_string: CRAM
+                - equals_string: VCF
+        postconditions:
+          slot_conditions:
+            reference_genome:
+              required: true
     attributes:
       sequencing_strategy:
         range: GeneticTestTypeEnum
@@ -2269,7 +2290,17 @@ enums:
       DEAD:
         meaning: OMOP:434489
         exact_mappings: [SNOMEDCT:419099009]
+      LOST_TO_FOLLOW_UP:
+        description: Status unknown because the participant was lost to follow-up (RD-CDM 3.1). No OMOP equivalent in BDCHM.
+        exact_mappings: [SNOMEDCT:399307001]
+      OPTED_OUT:
+        description: Status unknown because the participant opted out of follow-up (RD-CDM 3.1). No OMOP equivalent in BDCHM.
+        comments:
+          - >-
+            RareLink maps this to SNOMEDCT:185924006, which is not in the SNOMED
+            CT US edition served by BioPortal; mapping left out.
       UNKNOWN:
+        description: Status unknown for another or unrecorded reason.
         exact_mappings: [SNOMEDCT:261665006]
 
   ConditionSeverityEnum:

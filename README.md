@@ -128,18 +128,18 @@ Every `meaning` was checked against the ontology when written, and
 | Voice, Images, Video | `MediaFile` |
 | *(RD-CDM section 8)* Disability | `DisabilityAssessment` (ICF codes) |
 
-## Open questions from the inventory
+## Decisions on the inventory's open points
 
-- **Voice, Images, Video, EKG, Retinal ERG** have no registry listed yet.
-- **Genomic** standards are marked "?"; the schema assumes BAM/CRAM/VCF with a
-  stated reference genome.
-- **Medications** are marked "RxNorm?"; the schema requires RxNorm for the
-  harmonised code and keeps the patient's own wording in
-  `drug_name_as_reported`.
-- **Mortality**: whether cause of death is captured varies, so
-  `cause_of_death_known` records that explicitly.
-- **General Information**: the socioeconomic fields are free text until the
-  registries agree on bands.
+- **Medications** are marked "RxNorm?" in the inventory. A harmonised
+  `DrugExposure` must carry an RxNorm code; a medication that cannot yet be
+  coded is held back, with the source wording in `drug_name_as_reported`.
+- **Genomic** standards are marked "?". Genomic files are BAM, CRAM, VCF or
+  FASTQ, and BAM, CRAM and VCF files must state their reference genome (a
+  schema rule enforces this).
+- **Mortality:** whether cause of death is captured varies, so
+  `cause_of_death_known` records it explicitly.
+- **Still open:** voice, images, video, EKG and ERG have no registry listed
+  yet.
 
 ## Using it
 

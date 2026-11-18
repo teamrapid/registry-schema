@@ -91,7 +91,8 @@ only those that name the value itself were kept:
 | `EducationalAttainmentEnum` | same name | two high-school levels (NCIT) | degree levels: the NCIT terms are specific degrees ("Bachelor of Arts", "Master of Science", "Doctor of Philosophy") |
 | `InterpretationProgressStatusEnum` | `InterpretationProgressEnum` | none | SOLVED is "Molecular Diagnosis", UNSOLVED "Clinical Interpretation", COMPLETED "Procedure Completed" |
 
-The rejected mappings are worth reporting to the valuesets maintainers.
+A draft issue reporting the rejected mappings is in
+[upstream/linkml-valuesets-meanings.md](upstream/linkml-valuesets-meanings.md).
 
 ## BioPortal
 

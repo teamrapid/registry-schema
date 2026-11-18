@@ -70,7 +70,6 @@ crosswalk.
 | DNA change type | LOINC answer codes | Sequence Ontology | as above |
 | Body site | SNOMED CT body structure | UBERON | as above |
 | Units | Units of Measurement Ontology (UO) | UCUM codes | UCUM is what labs and FHIR use |
-| Vital status "lost to follow-up", "opted out" | separate values | `UNKNOWN` | BDCHM's value set has no equivalent |
 | Times | dates | age in days, with optional dates | BDCHM convention; registries often share only offsets |
 
 Where RAPID enumerations correspond to RD-CDM value sets, the RAPID value
@@ -88,14 +87,15 @@ files, biospecimen details, care teams, addresses, medications, allergies,
 immunizations, and per-record data provenance. These come from the RAPID TA1
 data inventory.
 
-## Open questions
+## Decisions
 
-- **Export.** RareLink already converts its records to FHIR and
-  Phenopackets. A RAPID → RD-CDM export, using the crosswalk, would let RAPID
-  data use that tooling. Not written yet.
-- **Sex coding.** RAPID now carries both BDCHM's administrative `sex` and
-  RD-CDM's `sex_at_birth`. The registries should say which they actually
-  collect.
-- **Vital status reasons.** Adding RD-CDM's "lost to follow-up" and
-  "opted out" to `VitalStatusEnum` would diverge from BDCHM; it needs a
-  decision.
+- **Sex.** RAPID keeps both BDCHM's administrative `sex` (OMOP) and RD-CDM's
+  `sex_at_birth` (SNOMED CT). A registry fills whichever it collects.
+- **Vital status.** `VitalStatusEnum` adds RD-CDM's `LOST_TO_FOLLOW_UP` and
+  `OPTED_OUT`, which BDCHM's OMOP value set lacks. RareLink's SNOMED CT code
+  for "lost to follow-up" (`SNOMEDCT:399307001`) checks out; its code for
+  "opted out" (`SNOMEDCT:185924006`) is not in SNOMED CT, so that value has no
+  mapping.
+- **Export.** A RAPID → RD-CDM/RareLink export, so RAPID data can use
+  RareLink's FHIR and Phenopackets converters, is a planned follow-up. The
+  crosswalk already defines the mapping it would implement.
