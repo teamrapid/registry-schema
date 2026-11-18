@@ -1,0 +1,87 @@
+# curie_map:
+#   rdcdm: https://github.com/BIH-CEI/rd-cdm/
+#   rapid: https://w3id.org/rapid/registry-schema/
+#   skos: http://www.w3.org/2004/02/skos/core#
+# mapping_set_id: https://w3id.org/rapid/registry-schema/mappings/rd_cdm_to_rapid
+# mapping_set_description: RD-CDM v2.1.0 data elements mapped to RAPID registry schema slots (Class.slot).
+# license: https://creativecommons.org/publicdomain/zero/1.0/
+subject_id	subject_label	subject_source_code	object_id	predicate_id	mapping_justification	comment
+rdcdm:1.1	Pseudonym	SNOMEDCT:422549004	rapid:Participant.id	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:1.2	Date of Admission	SNOMEDCT:399423000	rapid:Participant.enrollment_date	skos:closeMatch	semapv:ManualMappingCuration	RD-CDM 'admission or data capture'; RAPID uses enrolment date
+rdcdm:2.1	Date of Birth	SNOMEDCT:184099003	rapid:Person.date_of_birth	skos:exactMatch	semapv:ManualMappingCuration	same YYYY / YYYY-MM / YYYY-MM-DD precision
+rdcdm:2.2	Sex at Birth	LOINC:76689-9	rapid:Demography.sex_at_birth	skos:exactMatch	semapv:ManualMappingCuration	SexAtBirthEnum carries RareLink's SNOMED CT codes
+rdcdm:2.3	Karyotypic Sex	SNOMEDCT:1296886006	rapid:Demography.karyotypic_sex	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:2.4	Gender Identity	SNOMEDCT:263495000	rapid:Demography.gender_identity	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:2.5	Country of Origin	CustomCode:country_of_origin	rapid:Demography.country_of_birth	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:3.1	Vital Status	SNOMEDCT:278844005	rapid:Person.vital_status	skos:closeMatch	semapv:ManualMappingCuration	RAPID values are BDCHM OMOP codes; RD-CDM's lost-to-follow-up/opted-out reasons collapse to UNKNOWN
+rdcdm:3.2	Time of Death	SNOMEDCT:398299004	rapid:Death.record_date	skos:exactMatch	semapv:ManualMappingCuration	also Death.age_at_death / year_of_death
+rdcdm:3.3	Cause of Death	SNOMEDCT:184305005	rapid:Death.cause_of_death	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:3.4	Age Category	SNOMEDCT:105727008	rapid:Participant.age_category	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:3.5	Length of Gestation at Birth	SNOMEDCT:412726003	rapid:Person.gestational_age_at_birth	skos:exactMatch	semapv:ManualMappingCuration	RAPID stores total days
+rdcdm:3.6	Undiagnosed RD Case	SNOMEDCT:723663001	rapid:Participant.undiagnosed_rare_disease	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:4.1	Encounter Start	HL7FHIR:encounter.period.start	rapid:Encounter.age_at_record	skos:closeMatch	semapv:ManualMappingCuration	RAPID uses age in days, or record_date
+rdcdm:4.2	Encounter End	HL7FHIR:encounter.period.end	rapid:Encounter.age_at_end	skos:closeMatch	semapv:ManualMappingCuration	
+rdcdm:4.3	Encounter Status	SNOMEDCT:305058001	rapid:Encounter.encounter_status	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:4.4	Encounter Class	HL7FHIR:encounter.class	rapid:Encounter.encounter_class	skos:exactMatch	semapv:ManualMappingCuration	EncounterClassEnum maps to the ActCodes
+rdcdm:5.1	Disease	SNOMEDCT:64572001	rapid:Diagnosis.condition_concept	skos:exactMatch	semapv:ManualMappingCuration	MONDO in condition_concept; ORPHA/OMIM/ICD in equivalent_codings
+rdcdm:5.2	Verification Status	LOINC:99498-8	rapid:Diagnosis.diagnosis_status	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:5.3	Age at Onset	SNOMEDCT:424850005	rapid:Condition.age_at_onset	skos:closeMatch	semapv:ManualMappingCuration	plus onset_category (HPO)
+rdcdm:5.4	Date of Onset	SNOMEDCT:298059007	rapid:Diagnosis.onset_date	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:5.5	Age at Diagnosis	SNOMEDCT:423493009	rapid:Diagnosis.age_at_diagnosis	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:5.6	Date of Diagnosis	SNOMEDCT:432213005	rapid:Diagnosis.diagnosis_date	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:5.7	Body Site	SNOMEDCT:363698007	rapid:Condition.body_site	skos:closeMatch	semapv:ManualMappingCuration	RD-CDM uses SNOMED CT body structures; RAPID binds UBERON
+rdcdm:5.8	Clinical Status	SNOMEDCT:263493007	rapid:Condition.clinical_status	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:5.9	Severity	SNOMEDCT:246112005	rapid:Condition.severity	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.1	Genomic Diagnosis	SNOMEDCT:106221001	rapid:GeneticFinding.associated_condition	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.2	Progress Status of Interpretation	GA4GH:progress_status	rapid:GeneticTest.interpretation_progress	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.3	Interpretation Status	GA4GH:interpretation_status	rapid:GeneticFinding.interpretation_status	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.4	Structural Variant Analysis Method	LOINC:81304-8	rapid:GeneticTest.structural_variant_method	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.5	Reference Genome	LOINC:62374-4	rapid:GeneticFinding.reference_genome	skos:exactMatch	semapv:ManualMappingCuration	RAPID omits NCBI builds 34-36
+rdcdm:6.1.6	Genetic Mutation String	LOINC:LP7824-8	rapid:GeneticFinding.variant_description	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.7	Genomic DNA Change	LOINC:81290-9	rapid:GeneticFinding.hgvs_g	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.8	Sequence DNA Change	LOINC:48004-6	rapid:GeneticFinding.hgvs_c	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.9	Amino Acid Change	LOINC:48005-3	rapid:GeneticFinding.hgvs_p	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.10	Gene	LOINC:48018-6	rapid:GeneticFinding.gene	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.11	Zygosity	LOINC:53034-5	rapid:GeneticFinding.zygosity	skos:closeMatch	semapv:ManualMappingCuration	RD-CDM uses LOINC answers; RAPID binds GENO
+rdcdm:6.1.12	Genomic Source Class	LOINC:48002-0	rapid:GeneticFinding.allele_origin	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.13	DNA Change Type	LOINC:48019-4	rapid:GeneticFinding.variant_type	skos:closeMatch	semapv:ManualMappingCuration	RD-CDM uses LOINC answers; RAPID binds SO
+rdcdm:6.1.14	Clinical Significance [ACMG]	LOINC:53037-8	rapid:GeneticFinding.acmg_classification	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.15	Therapeutic Actionability	GA4GH:therapeutic_actionability	rapid:GeneticFinding.therapeutic_actionability	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.1.16	Clinical Annotation Level Of Evidence	LOINC:93044-6	rapid:GeneticFinding.acmg_evidence_level	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.2.1	Phenotypic Feature	SNOMEDCT:8116006	rapid:PhenotypicFeature.phenotype	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.2.2	Status	SNOMEDCT:363778006	rapid:PhenotypicFeature.excluded	skos:closeMatch	semapv:ManualMappingCuration	confirmed/refuted as a boolean
+rdcdm:6.2.3	Determination Date	SNOMEDCT:439272007:704321009=363778006	rapid:PhenotypicFeature.record_date	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.2.4	Resolution Date	HP:0034382	rapid:PhenotypicFeature.age_at_resolution	skos:closeMatch	semapv:ManualMappingCuration	RAPID uses age in days
+rdcdm:6.2.5	Onset Category	HP:0003674	rapid:PhenotypicFeature.onset_category	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.2.6	Temporal Pattern	HP:0011008	rapid:PhenotypicFeature.temporal_pattern	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.2.7	Severity	HP:0012824	rapid:PhenotypicFeature.severity	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.2.8	Modifiers	GA4GH:phenotypicfeature.modifier	rapid:PhenotypicFeature.modifiers	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.2.9	Evidence	GA4GH:phenotypicfeature.evidence	rapid:PhenotypicFeature.evidence	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.3.1	Assay	NCIT:C60819	rapid:MeasurementObservation.observation_type	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.3.2	Value	NCIT:C25712	rapid:Observation.value_quantity	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.3.3	Value Unit	NCIT:C92571	rapid:Quantity.unit	skos:closeMatch	semapv:ManualMappingCuration	RD-CDM uses UO; RAPID uses UCUM
+rdcdm:6.3.4	Interpretation	NCIT:C41255	rapid:MeasurementObservation.interpretation	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.3.5	Time Observed	NCIT:C82577	rapid:Observation.record_date	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.3.6	Procedure	SNOMEDCT:122869004	rapid:Procedure.procedure_concept	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.0	Family Identifier	GA4GH:family.id	rapid:Family.id	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.1	Family Member Pseudonym	CustomCode:family_member_id	rapid:FamilyHistory.relative_pseudonym	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.2	Propositus/-a	SNOMEDCT:64245008	rapid:Participant.is_proband	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.3	Relationship of the Individual to the Propositus	SNOMEDCT:408732007	rapid:Participant.relationship_to_proband	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.4	Consanguinity	SNOMEDCT:842009	rapid:Family.consanguinity	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.5	Family Member Relationship	SNOMEDCT:444018008	rapid:FamilyHistory.relationship	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.6	Family Member Record Status	HL7FHIR:familymemberhistory.status	rapid:FamilyHistory.record_status	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.7	Family Member Sex	LOINC:54123-5	rapid:FamilyHistory.relative_sex	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.8	Family Member Age	LOINC:54141-7	rapid:FamilyHistory.relative_age	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.9	Family Member Date of Birth	LOINC:54124-3	rapid:FamilyHistory.relative_date_of_birth	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.10	Family Member Deceased	SNOMEDCT:740604001	rapid:FamilyHistory.relative_deceased	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.11	Family Member Cause of Death	LOINC:54112-8	rapid:FamilyHistory.relative_cause_of_death	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.12	Family Member Deceased Age	LOINC:92662-6	rapid:FamilyHistory.relative_age_at_death	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:6.4.13	Family Member Disease	LOINC:75315-2	rapid:FamilyHistory.relative_conditions	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:7.1	Consent Status	SNOMEDCT:309370004	rapid:Consent.consent_status	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:7.2	Consent Date	HL7FHIR:consent.datetime	rapid:Consent.valid_from	skos:closeMatch	semapv:ManualMappingCuration	
+rdcdm:7.3	Health Policy Monitoring	SNOMEDCT:386318002	rapid:Consent.policy_references	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:7.4	Agreement to be Contacted for Research	CustomCode:consent_contact_research	rapid:Consent.contact_for_research	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:7.5	Consent to the Reuse of Data	CustomCode:consent_data_reuse	rapid:Consent.data_reuse	skos:exactMatch	semapv:ManualMappingCuration	DUO codes in data_use_permission say what reuse is allowed
+rdcdm:7.6	Biological Sample	SNOMEDCT:123038009	rapid:Consent.biospecimen_available	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:7.7	Link to a Biobank	CustomCode:biobank_link	rapid:Consent.biobank_link	skos:exactMatch	semapv:ManualMappingCuration	
+rdcdm:8.1	Classification of Functioning / Disability	CustomCode:icf_score	rapid:DisabilityAssessment.icf_codes	skos:exactMatch	semapv:ManualMappingCuration	

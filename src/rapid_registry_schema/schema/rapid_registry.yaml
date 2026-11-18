@@ -42,6 +42,8 @@ see_also:
   - https://arpa-h.gov/explore-funding/programs/rapid
   - https://rtiinternational.github.io/NHLBI-BDC-DMC-HM/
   - https://linkml.io/cmdr
+  - https://github.com/BIH-CEI/RareLink
+  - https://github.com/BIH-CEI/rd-cdm
 
 prefixes:
   rapid: https://w3id.org/rapid/registry-schema/
@@ -68,6 +70,14 @@ prefixes:
   CVX: http://hl7.org/fhir/sid/cvx/
   HGNC: http://identifiers.org/hgnc/
   ICD10CM: https://icd.codes/icd10cm/
+  ICD11: "https://icd.who.int/browse/latest-release/foundation/en#"
+  ORPHA: http://www.orpha.net/ORDO/Orphanet_
+  OMIM: "https://omim.org/MIM:"
+  ECO: http://purl.obolibrary.org/obo/ECO_
+  HL7FHIR: http://hl7.org/fhir/
+  GA4GH: https://phenopacket-schema.readthedocs.io/en/latest/
+  rdcdm: https://github.com/BIH-CEI/rd-cdm/
+  rarelink: https://github.com/BIH-CEI/rarelink/
   UCUM: https://units-of-measurement.org/
   bioregistry: https://bioregistry.io/registry/
 
@@ -126,6 +136,14 @@ classes:
         inlined_as_list: true
       family_relationships:
         range: FamilyRelationship
+        multivalued: true
+        inlined_as_list: true
+      family_histories:
+        range: FamilyHistory
+        multivalued: true
+        inlined_as_list: true
+      disabilities:
+        range: DisabilityAssessment
         multivalued: true
         inlined_as_list: true
       care_teams:
@@ -447,6 +465,16 @@ classes:
       year_of_birth:
         range: integer
         minimum_value: 1900
+      date_of_birth:
+        description: >-
+          Date of birth at whatever precision the registry may share: YYYY,
+          YYYY-MM or YYYY-MM-DD (RD-CDM 2.1).
+        pattern: "^[0-9]{4}(-[0-9]{2}(-[0-9]{2})?)?$"
+      gestational_age_at_birth:
+        range: integer
+        description: Length of gestation at birth, in days (RD-CDM 3.5 records weeks + days).
+        unit:
+          ucum_code: d
       vital_status:
         range: VitalStatusEnum
 
@@ -482,8 +510,20 @@ classes:
           enrolment" or "date of birth".
       is_proband:
         range: boolean
+        description: True for the propositus/-a, the first affected family member to come to attention (RD-CDM 6.4.2).
+      relationship_to_proband:
+        range: FamilyRelationshipEnum
+        description: How this participant is related to the family's proband (RD-CDM 6.4.3).
       affected_status:
         range: AffectedStatusEnum
+      undiagnosed_rare_disease:
+        range: boolean
+        description: >-
+          True when the participant is in the registry without an established
+          rare disease diagnosis (RD-CDM 3.6, "Undiagnosed RD case").
+      age_category:
+        range: AgeCategoryEnum
+        description: Age group at the time of data capture (RD-CDM 3.4).
       consents:
         range: Consent
         multivalued: true
@@ -502,6 +542,19 @@ classes:
     attributes:
       sex:
         range: SexEnum
+        description: Administrative sex, coded as in BDCHM (OMOP).
+      sex_at_birth:
+        range: SexAtBirthEnum
+        description: Sex assigned at birth (RD-CDM 2.2, LOINC 76689-9).
+      karyotypic_sex:
+        range: KaryotypicSexEnum
+        description: Chromosomal sex (RD-CDM 2.3).
+      gender_identity:
+        range: GenderIdentityEnum
+        description: Self-assigned gender (RD-CDM 2.4).
+      country_of_birth:
+        description: ISO 3166-1 alpha-2 or alpha-3 code for the country of birth (RD-CDM 2.5).
+        pattern: "^[A-Z]{2,3}$"
       race:
         range: RaceEnum
         multivalued: true
@@ -578,6 +631,22 @@ classes:
       consent_document:
         range: DocumentFile
         description: The signed form, if stored (often a PDF).
+      policy_references:
+        range: uri
+        multivalued: true
+        description: Policies the consent refers to (RD-CDM 7.3).
+      contact_for_research:
+        range: YesNoUnknownEnum
+        description: Agrees to be contacted about research (RD-CDM 7.4).
+      data_reuse:
+        range: YesNoUnknownEnum
+        description: Consents to reuse of their data (RD-CDM 7.5).
+      biospecimen_available:
+        range: YesNoUnknownEnum
+        description: A biological sample is available for research (RD-CDM 7.6).
+      biobank_link:
+        range: uri
+        description: Link to the sample's biobank record (RD-CDM 7.7).
 
   # ---- family / pedigree ---------------------------------------------------
 
@@ -592,6 +661,9 @@ classes:
     attributes:
       family_type:
         range: FamilyTypeEnum
+      consanguinity:
+        range: YesNoUnknownEnum
+        description: Whether the proband's parents are related by blood (RD-CDM 6.4.4).
       members:
         range: Participant
         multivalued: true
@@ -621,6 +693,64 @@ classes:
       relationship:
         range: FamilyRelationshipEnum
         required: true
+
+  FamilyHistory:
+    is_a: ParticipantRecord
+    description: >-
+      What is known about one relative who is not themselves enrolled, as
+      reported for the participant (RD-CDM section 6.4, FHIR
+      FamilyMemberHistory). A relative who is enrolled is a Participant linked
+      by FamilyRelationship instead.
+    class_uri: fhir:FamilyMemberHistory
+    attributes:
+      relative_pseudonym:
+        description: Pseudonym for the relative, stable across the family's records (RD-CDM 6.4.1).
+      relationship:
+        range: FamilyRelationshipEnum
+        required: true
+        description: The relative's relationship to the participant (RD-CDM 6.4.5).
+      record_status:
+        range: FamilyHistoryStatusEnum
+        description: RD-CDM 6.4.6.
+      relative_sex:
+        range: SexEnum
+        description: RD-CDM 6.4.7.
+      relative_age:
+        range: integer
+        description: Current age in years (RD-CDM 6.4.8).
+        unit:
+          ucum_code: a
+      relative_date_of_birth:
+        pattern: "^[0-9]{4}(-[0-9]{2}(-[0-9]{2})?)?$"
+        description: RD-CDM 6.4.9.
+      relative_deceased:
+        range: YesNoUnknownEnum
+        description: RD-CDM 6.4.10.
+      relative_cause_of_death:
+        range: Concept
+        inlined: true
+        description: RD-CDM 6.4.11.
+        bindings:
+          - binds_value_of: id
+            range: ConditionTerm
+            obligation_level: REQUIRED
+      relative_age_at_death:
+        range: integer
+        description: Age at death in years (RD-CDM 6.4.12).
+        unit:
+          ucum_code: a
+      relative_conditions:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        description: Conditions the relative has or had (RD-CDM 6.4.13).
+        bindings:
+          - binds_value_of: id
+            range: ConditionTerm
+            obligation_level: REQUIRED
+      affected_with_same_disease:
+        range: YesNoUnknownEnum
+        description: Whether the relative has the participant's rare disease.
 
   # ---- care team and encounters -------------------------------------------
 
@@ -668,6 +798,9 @@ classes:
     attributes:
       encounter_class:
         range: EncounterClassEnum
+      encounter_status:
+        range: EncounterStatusEnum
+        description: RD-CDM 4.3.
       age_at_end:
         range: integer
         unit:
@@ -746,6 +879,20 @@ classes:
     attributes:
       diagnosis_status:
         range: DiagnosisStatusEnum
+        description: Verification status, as FHIR Condition.verificationStatus (RD-CDM 5.2).
+      equivalent_codings:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          The same diagnosis in other disease vocabularies (Orphanet, OMIM,
+          ICD-10-CM, ICD-11), as RD-CDM 5.1 allows.
+      onset_date:
+        range: date
+        description: RD-CDM 5.4.
+      diagnosis_date:
+        range: date
+        description: RD-CDM 5.6.
       diagnosis_basis:
         range: DiagnosisBasisEnum
         multivalued: true
@@ -785,8 +932,53 @@ classes:
         range: integer
         unit:
           ucum_code: d
+      age_at_resolution:
+        range: integer
+        description: Age in days when the feature resolved (RD-CDM 6.2.4).
+        unit:
+          ucum_code: d
       severity:
-        range: ConditionSeverityEnum
+        range: Concept
+        inlined: true
+        description: HPO severity term (RD-CDM 6.2.7).
+        bindings:
+          - binds_value_of: id
+            range: PhenotypeSeverityTerm
+            obligation_level: REQUIRED
+      temporal_pattern:
+        range: Concept
+        inlined: true
+        description: HPO temporal pattern term (RD-CDM 6.2.6).
+        bindings:
+          - binds_value_of: id
+            range: TemporalPatternTerm
+            obligation_level: REQUIRED
+      modifiers:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        description: HPO clinical modifiers such as laterality (RD-CDM 6.2.8).
+        bindings:
+          - binds_value_of: id
+            range: ClinicalModifierTerm
+            obligation_level: REQUIRED
+      causal_organism:
+        range: Concept
+        inlined: true
+        description: Organism causing the feature, where relevant.
+        bindings:
+          - binds_value_of: id
+            range: OrganismTerm
+            obligation_level: REQUIRED
+      evidence:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        description: Evidence for the observation, as ECO terms (RD-CDM 6.2.9).
+        bindings:
+          - binds_value_of: id
+            range: EvidenceTerm
+            obligation_level: REQUIRED
 
   Procedure:
     is_a: ParticipantRecord
@@ -1126,6 +1318,12 @@ classes:
         inlined_as_list: true
       overall_result:
         range: GeneticTestResultEnum
+      interpretation_progress:
+        range: InterpretationProgressStatusEnum
+        description: Whether interpretation of the test is finished and the case solved (RD-CDM 6.1.2).
+      structural_variant_method:
+        range: StructuralVariantMethodEnum
+        description: Method used to analyse structural variants (RD-CDM 6.1.4).
       findings:
         range: GeneticFinding
         multivalued: true
@@ -1146,6 +1344,10 @@ classes:
       gene:
         range: HgncGeneConcept
         inlined: true
+      variant_description:
+        description: >-
+          The variant as written in the source, when it is not a validated HGVS
+          expression (RD-CDM 6.1.6).
       hgvs_c:
         description: Coding DNA HGVS expression including transcript, e.g. NM_000138.5:c.1A>G.
       hgvs_p:
@@ -1170,8 +1372,20 @@ classes:
             obligation_level: REQUIRED
       allele_origin:
         range: AlleleOriginEnum
+        description: Genomic source class (RD-CDM 6.1.12).
       acmg_classification:
         range: ACMGClassificationEnum
+        description: RD-CDM 6.1.14.
+      interpretation_status:
+        range: InterpretationStatusEnum
+        description: Whether the variant explains the diagnosis (RD-CDM 6.1.3).
+      therapeutic_actionability:
+        range: TherapeuticActionabilityEnum
+        description: RD-CDM 6.1.15.
+      acmg_evidence_level:
+        range: ACMGEvidenceLevelEnum
+        multivalued: true
+        description: Strength of the ACMG/AMP evidence applied (RD-CDM 6.1.16).
       associated_condition:
         range: Concept
         inlined: true
@@ -1331,6 +1545,24 @@ classes:
       available_for_research:
         range: boolean
 
+  # ---- functioning and disability ------------------------------------------
+
+  DisabilityAssessment:
+    is_a: ParticipantRecord
+    description: >-
+      Functioning and disability classified with the WHO International
+      Classification of Functioning, Disability and Health (RD-CDM 8.1).
+    attributes:
+      icf_codes:
+        multivalued: true
+        description: >-
+          ICF category codes with qualifiers, e.g. "d450.2" (walking, moderate
+          difficulty).
+        pattern: "^[bsde][0-9]{1,5}(\\.[0-9]{1,3})?$"
+      assessment_instrument:
+        range: Questionnaire
+        description: Instrument used to derive the classification, if any.
+
   # ---- mortality -----------------------------------------------------------
 
   Death:
@@ -1446,6 +1678,54 @@ enums:
       relationship_types:
         - rdfs:subClassOf
       include_self: false
+
+  PhenotypeSeverityTerm:
+    description: Severity terms from the HPO Severity branch.
+    reachable_from:
+      source_ontology: obo:hp
+      source_nodes:
+        - HP:0012824  # Severity
+      relationship_types:
+        - rdfs:subClassOf
+      include_self: false
+
+  TemporalPatternTerm:
+    description: Temporal pattern terms from HPO.
+    reachable_from:
+      source_ontology: obo:hp
+      source_nodes:
+        - HP:0011008  # Temporal pattern
+      relationship_types:
+        - rdfs:subClassOf
+      include_self: false
+
+  ClinicalModifierTerm:
+    description: HPO clinical modifiers (laterality, triggers, pattern of distribution, etc.).
+    reachable_from:
+      source_ontology: obo:hp
+      source_nodes:
+        - HP:0012823  # Clinical modifier
+      relationship_types:
+        - rdfs:subClassOf
+      include_self: false
+
+  OrganismTerm:
+    description: Organisms from NCBI Taxonomy.
+    reachable_from:
+      source_ontology: obo:ncbitaxon
+      source_nodes:
+        - NCBITaxon:1  # root
+      relationship_types:
+        - rdfs:subClassOf
+
+  EvidenceTerm:
+    description: Evidence types from the Evidence and Conclusion Ontology.
+    reachable_from:
+      source_ontology: obo:eco
+      source_nodes:
+        - ECO:0000000  # evidence
+      relationship_types:
+        - rdfs:subClassOf
 
   ConditionTerm:
     description: >-
@@ -1724,14 +2004,19 @@ enums:
   # either model shares codes.
 
   SexEnum:
-    description: Sex, as OMOP concepts (copied from BDCHM SexEnum).
+    description: >-
+      Sex, as OMOP concepts (copied from BDCHM SexEnum). exact_mappings give the
+      SNOMED CT codes RareLink 2.0.7 uses for sex at birth.
     permissible_values:
       MALE:
         meaning: OMOP:8507
+        exact_mappings: [SNOMEDCT:248153007]
       FEMALE:
         meaning: OMOP:8532
+        exact_mappings: [SNOMEDCT:248152002]
       UNKNOWN:
         meaning: OMOP:45877986
+        exact_mappings: [SNOMEDCT:184115007]
 
   RaceEnum:
     description: US OMB race categories as OMOP concepts (copied from BDCHM RaceEnum).
@@ -1764,23 +2049,33 @@ enums:
         meaning: OMOP:45877986
 
   VitalStatusEnum:
-    description: Vital status as OMOP concepts (copied from BDCHM VitalStatusEnum).
+    description: >-
+      Vital status as OMOP concepts (copied from BDCHM VitalStatusEnum).
+      exact_mappings give the SNOMED CT codes RareLink 2.0.7 uses (RD-CDM 3.1).
     permissible_values:
       ALIVE:
         meaning: OMOP:4230556
+        exact_mappings: [SNOMEDCT:438949009]
       DEAD:
         meaning: OMOP:434489
+        exact_mappings: [SNOMEDCT:419099009]
       UNKNOWN:
+        exact_mappings: [SNOMEDCT:261665006]
 
   ConditionSeverityEnum:
-    description: Severity as OMOP concepts (copied from BDCHM ConditionSeverityEnum).
+    description: >-
+      Severity as OMOP concepts (copied from BDCHM ConditionSeverityEnum).
+      exact_mappings give the SNOMED CT codes RareLink 2.0.7 uses (RD-CDM 5.9).
     permissible_values:
       MILD:
         meaning: OMOP:4116992
+        exact_mappings: [SNOMEDCT:255604002]
       MODERATE:
         meaning: OMOP:4285732
+        exact_mappings: [SNOMEDCT:6736007]
       SEVERE:
         meaning: OMOP:4087703
+        exact_mappings: [SNOMEDCT:24484000]
 
   FamilyRelationshipEnum:
     description: >-
@@ -1842,13 +2137,39 @@ enums:
       OTHER:
 
   EncounterClassEnum:
+    description: >-
+      Encounter class. exact_mappings give the HL7 v3 ActCode used by FHIR
+      Encounter.class and by RD-CDM 4.4.
     permissible_values:
       INPATIENT:
+        exact_mappings: [HL7FHIR:imp]
       OUTPATIENT:
+        exact_mappings: [HL7FHIR:amb]
       EMERGENCY:
+        exact_mappings: [HL7FHIR:emer]
+      OBSERVATION:
+        exact_mappings: [HL7FHIR:obsenc]
       TELEHEALTH:
+        exact_mappings: [HL7FHIR:vr]
       HOME_HEALTH:
+        exact_mappings: [HL7FHIR:hh]
+      RARE_DISEASE_SPECIALIST_CENTER:
+        description: Visit to a rare disease specialist centre (RD-CDM extension to the FHIR codes).
+        exact_mappings: [rarelink:rdc]
       OTHER:
+
+  EncounterStatusEnum:
+    description: FHIR R4 Encounter.status codes, as used by RD-CDM 4.3.
+    permissible_values:
+      PLANNED:
+      ARRIVED:
+      TRIAGED:
+      IN_PROGRESS:
+      ON_LEAVE:
+      FINISHED:
+      CANCELLED:
+      ENTERED_IN_ERROR:
+      UNKNOWN:
 
   AddressUseEnum:
     permissible_values:
@@ -1857,24 +2178,40 @@ enums:
       PREVIOUS:
 
   ClinicalStatusEnum:
-    description: Clinical status, following FHIR Condition.clinicalStatus.
+    description: Clinical status, following FHIR Condition.clinicalStatus (RD-CDM 5.8).
     permissible_values:
       ACTIVE:
+        exact_mappings: [HL7FHIR:active]
       RECURRENCE:
+        exact_mappings: [HL7FHIR:recurrence]
       RELAPSE:
+        exact_mappings: [HL7FHIR:relapse]
       INACTIVE:
+        exact_mappings: [HL7FHIR:inactive]
       REMISSION:
+        exact_mappings: [HL7FHIR:remission]
       RESOLVED:
+        exact_mappings: [HL7FHIR:resolved]
       UNKNOWN:
 
   DiagnosisStatusEnum:
+    description: >-
+      Verification status of a diagnosis: the FHIR Condition.verificationStatus
+      codes, which RD-CDM 5.2 also uses. A participant with no diagnosis is
+      flagged with Participant.undiagnosed_rare_disease instead.
     permissible_values:
-      CONFIRMED:
+      UNCONFIRMED:
+        exact_mappings: [HL7FHIR:unconfirmed]
       PROVISIONAL:
-      SUSPECTED:
-      RULED_OUT:
-      UNDIAGNOSED:
-        description: Participant is in the registry without a diagnosis (diagnostic odyssey).
+        exact_mappings: [HL7FHIR:provisional]
+      DIFFERENTIAL:
+        exact_mappings: [HL7FHIR:differential]
+      CONFIRMED:
+        exact_mappings: [HL7FHIR:confirmed]
+      REFUTED:
+        exact_mappings: [HL7FHIR:refuted]
+      ENTERED_IN_ERROR:
+        exact_mappings: [HL7FHIR:entered-in-error]
 
   DiagnosisBasisEnum:
     permissible_values:
@@ -2003,38 +2340,65 @@ enums:
       PENDING:
 
   ReferenceGenomeEnum:
+    description: exact_mappings give the LOINC 62374-4 answer codes RareLink 2.0.7 uses (RD-CDM 6.1.5).
     permissible_values:
       GRCh37:
+        exact_mappings: [LOINC:LA14029-5]
       GRCh38:
+        exact_mappings: [LOINC:LA26806-2]
       T2T_CHM13:
 
   AlleleOriginEnum:
+    description: >-
+      Genomic source class of a variant. exact_mappings give the LOINC answer
+      codes RareLink 2.0.7 uses for RD-CDM 6.1.12 (LOINC 48002-0).
     permissible_values:
       GERMLINE:
+        exact_mappings: [LOINC:LA6683-2]
+      LIKELY_GERMLINE:
+        exact_mappings: [LOINC:LA18194-3]
       DE_NOVO:
+        exact_mappings: [LOINC:LA26807-0]
       MATERNAL:
+        description: Inherited from the mother. No LOINC 48002-0 answer; maps to GERMLINE.
       PATERNAL:
+        description: Inherited from the father. No LOINC 48002-0 answer; maps to GERMLINE.
       SOMATIC:
+        exact_mappings: [LOINC:LA6684-0]
+      LIKELY_SOMATIC:
+        exact_mappings: [LOINC:LA18195-0]
+      FETAL:
+        exact_mappings: [LOINC:LA10429-1]
+      LIKELY_FETAL:
+        exact_mappings: [LOINC:LA18196-8]
       UNKNOWN:
+        exact_mappings: [LOINC:LA18197-6]
 
   ACMGClassificationEnum:
-    description: ACMG/AMP five-tier variant classification, bound to NCIT.
+    description: >-
+      ACMG/AMP five-tier variant classification, bound to NCIT. exact_mappings
+      give the LOINC 53037-8 answer codes RareLink 2.0.7 uses (RD-CDM 6.1.14).
     permissible_values:
       PATHOGENIC:
         title: Pathogenic Variant
         meaning: NCIT:C168799
+        exact_mappings: [LOINC:LA6668-3]
       LIKELY_PATHOGENIC:
         title: Likely Pathogenic Variant
         meaning: NCIT:C168800
+        exact_mappings: [LOINC:LA26332-9]
       UNCERTAIN_SIGNIFICANCE:
         title: Variant of Unknown Significance
         meaning: NCIT:C94187
+        exact_mappings: [LOINC:LA26333-7]
       LIKELY_BENIGN:
         title: Variant Likely Benign
         meaning: NCIT:C168801
+        exact_mappings: [LOINC:LA26334-5]
       BENIGN:
         title: Variant Benign
         meaning: NCIT:C168802
+        exact_mappings: [LOINC:LA6675-8]
 
   PhysiologicalSignalModalityEnum:
     permissible_values:
@@ -2125,3 +2489,160 @@ enums:
       RESPIRATORY_TRACT:
         meaning: OMOP:40486069
       OTHER:
+
+  # The value sets below come from RD-CDM / RareLink. exact_mappings carry the
+  # codes RareLink 2.0.7 assigns; they are copied from its LinkML schema and
+  # not independently re-checked against SNOMED CT or LOINC.
+
+  YesNoUnknownEnum:
+    permissible_values:
+      "YES":
+      "NO":
+      UNKNOWN:
+
+  SexAtBirthEnum:
+    description: Sex assigned at birth (RD-CDM 2.2).
+    permissible_values:
+      FEMALE:
+        exact_mappings: [SNOMEDCT:248152002]
+      MALE:
+        exact_mappings: [SNOMEDCT:248153007]
+      INTERSEX:
+        exact_mappings: [SNOMEDCT:32570691000036108]
+      UNKNOWN:
+        exact_mappings: [SNOMEDCT:184115007]
+      NOT_RECORDED:
+        exact_mappings: [SNOMEDCT:1220561009]
+
+  KaryotypicSexEnum:
+    description: Chromosomal sex (RD-CDM 2.3).
+    permissible_values:
+      XX:
+        exact_mappings: [SNOMEDCT:734875008]
+      XY:
+        exact_mappings: [SNOMEDCT:734876009]
+      X0:
+        exact_mappings: [SNOMEDCT:80427008]
+      XXY:
+        exact_mappings: [SNOMEDCT:65162001]
+      XXX:
+        exact_mappings: [SNOMEDCT:35111009]
+      XXYY:
+        exact_mappings: [SNOMEDCT:403760006]
+      XXXY:
+        exact_mappings: [SNOMEDCT:78317008]
+      XXXX:
+        exact_mappings: [SNOMEDCT:10567003]
+      XYY:
+        exact_mappings: [SNOMEDCT:48930007]
+      OTHER:
+        exact_mappings: [SNOMEDCT:74964007]
+      UNKNOWN:
+        exact_mappings: [SNOMEDCT:261665006]
+
+  GenderIdentityEnum:
+    description: Gender identity (RD-CDM 2.4).
+    permissible_values:
+      FEMALE:
+        exact_mappings: [SNOMEDCT:446141000124107]
+      MALE:
+        exact_mappings: [SNOMEDCT:446151000124109]
+      NONBINARY:
+        exact_mappings: [SNOMEDCT:33791000087105]
+      UNKNOWN:
+        exact_mappings: [SNOMEDCT:394743007]
+      NOT_RECORDED:
+        exact_mappings: [SNOMEDCT:1220561009]
+
+  AgeCategoryEnum:
+    description: Age group at data capture (RD-CDM 3.4).
+    permissible_values:
+      FETAL:
+        exact_mappings: [SNOMEDCT:303112003]
+      INFANCY:
+        exact_mappings: [SNOMEDCT:3658006]
+      TODDLER:
+        exact_mappings: [SNOMEDCT:713153009]
+      CHILDHOOD:
+        exact_mappings: [SNOMEDCT:255398004]
+      ADOLESCENCE:
+        exact_mappings: [SNOMEDCT:263659003]
+      ADULTHOOD:
+        exact_mappings: [SNOMEDCT:41847000]
+      UNKNOWN:
+        exact_mappings: [SNOMEDCT:261665006]
+
+  FamilyHistoryStatusEnum:
+    description: FHIR FamilyMemberHistory.status codes (RD-CDM 6.4.6).
+    permissible_values:
+      PARTIAL:
+      COMPLETED:
+      ENTERED_IN_ERROR:
+      HEALTH_UNKNOWN:
+
+  InterpretationProgressStatusEnum:
+    description: GA4GH Phenopackets Interpretation.progress_status (RD-CDM 6.1.2).
+    permissible_values:
+      UNKNOWN_PROGRESS:
+      IN_PROGRESS:
+      COMPLETED:
+      SOLVED:
+      UNSOLVED:
+
+  InterpretationStatusEnum:
+    description: GA4GH Phenopackets GenomicInterpretation.interpretation_status (RD-CDM 6.1.3).
+    permissible_values:
+      UNKNOWN_STATUS:
+      REJECTED:
+      CANDIDATE:
+      CONTRIBUTORY:
+      CAUSATIVE:
+
+  TherapeuticActionabilityEnum:
+    description: GA4GH Phenopackets VariantInterpretation.therapeutic_actionability (RD-CDM 6.1.15).
+    permissible_values:
+      UNKNOWN_ACTIONABILITY:
+      NOT_ACTIONABLE:
+      ACTIONABLE:
+
+  StructuralVariantMethodEnum:
+    description: Structural variant analysis method, LOINC 81304-8 answers (RD-CDM 6.1.4).
+    permissible_values:
+      KARYOTYPING:
+        exact_mappings: [LOINC:LA26406-1]
+      FISH:
+        exact_mappings: [LOINC:LA26404-6]
+      PCR:
+        exact_mappings: [LOINC:LA26418-6]
+      QPCR:
+        exact_mappings: [LOINC:LA26419-4]
+      SNP_ARRAY:
+        exact_mappings: [LOINC:LA26400-4]
+      RFLP:
+        exact_mappings: [LOINC:LA26813-8]
+      DNA_HYBRIDIZATION:
+        exact_mappings: [LOINC:LA26810-4]
+      SEQUENCING:
+        exact_mappings: [LOINC:LA26398-0]
+      MLPA:
+        exact_mappings: [LOINC:LA26415-2]
+      OTHER:
+        exact_mappings: [LOINC:LA46-8]
+
+  ACMGEvidenceLevelEnum:
+    description: ACMG/AMP evidence strength, LOINC 93044-6 answers (RD-CDM 6.1.16).
+    permissible_values:
+      PATHOGENIC_VERY_STRONG:
+        exact_mappings: [LOINC:LA30200-2]
+      PATHOGENIC_STRONG:
+        exact_mappings: [LOINC:LA30201-0]
+      PATHOGENIC_MODERATE:
+        exact_mappings: [LOINC:LA30202-8]
+      PATHOGENIC_SUPPORTING:
+        exact_mappings: [LOINC:LA30203-6]
+      BENIGN_SUPPORTING:
+        exact_mappings: [LOINC:LA30204-4]
+      BENIGN_STRONG:
+        exact_mappings: [LOINC:LA30205-1]
+      STAND_ALONE:
+        exact_mappings: [LOINC:LA30206-9]

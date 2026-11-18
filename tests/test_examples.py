@@ -6,6 +6,7 @@ is marked `network`; skip it with `-m "not network"`.
 """
 
 import shutil
+import sys
 import subprocess
 from pathlib import Path
 
@@ -63,3 +64,14 @@ def test_valid_examples_pass_term_bindings(path, tmp_path):
 def test_term_invalid_examples_fail_term_bindings(path, tmp_path):
     result = _term_validate(path, tmp_path)
     assert result.returncode != 0, f"{path.name} was expected to fail term validation"
+
+
+@pytest.mark.network
+@pytest.mark.parametrize("path", VALID, ids=lambda p: p.name)
+def test_valid_examples_pass_code_check(path):
+    """LOINC, RxNorm, HGNC and UCUM codes resolve and carry their source label."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "check_codes.py"), str(path)],
+        capture_output=True, text=True, timeout=300,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

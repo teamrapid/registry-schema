@@ -21,3 +21,11 @@ ontology_adapters:
   UCUM: ""
   HGNC: ""
   rapid: ""
+  ECO: ols:eco
+  ORPHA: ""
+  OMIM: ""
+  ICD10CM: ""
+  ICD11: ""
+  HL7FHIR: ""
+  GA4GH: ""
+  rarelink: ""

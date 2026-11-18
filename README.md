@@ -9,6 +9,19 @@ and modelled on two existing LinkML models:
   (BDCHM), and
 - the [LinkML Core Model for Clinical Data Collection](https://linkml.io/cmdr) (CMDR).
 
+It is also aligned element by element with the rare disease common data model
+([RD-CDM](https://github.com/BIH-CEI/rd-cdm)) used by
+[RareLink](https://github.com/BIH-CEI/RareLink); see
+[docs/rarelink-alignment.md](docs/rarelink-alignment.md).
+
+## Documentation
+
+- [docs/terminology.md](docs/terminology.md) — which vocabulary each value
+  uses, how codes are checked, and setting up BioPortal.
+- [docs/rarelink-alignment.md](docs/rarelink-alignment.md) — how the schema
+  relates to RareLink and RD-CDM, and the crosswalk in
+  [`mappings/rd_cdm_to_rapid.sssom.tsv`](mappings/rd_cdm_to_rapid.sssom.tsv).
+
 The schema is [`src/rapid_registry_schema/schema/rapid_registry.yaml`](src/rapid_registry_schema/schema/rapid_registry.yaml).
 
 ## Status
@@ -70,10 +83,11 @@ accepts is enforced in one of two ways:
 | HGNC | genes | `HgncGeneConcept` id pattern |
 | UCUM | units | `UcumUnitConcept` id pattern |
 
-LOINC, RxNorm, SNOMED CT, CVX, HGNC and UCUM have no OAK adapter the term
-validator can use, so for those the schema checks only that the code is
-well-formed for its vocabulary. A full check of those codes needs the
-vocabulary's own service (RxNav, the LOINC FHIR server, the HGNC REST API).
+LOINC, RxNorm, SNOMED CT, CVX, HGNC and UCUM are not OBO ontologies, so the
+term validator cannot look them up. The schema's id patterns reject codes from
+the wrong vocabulary, and `scripts/check_codes.py` looks each code up (NLM
+Clinical Tables, RxNav, genenames.org, and BioPortal for SNOMED CT and CVX)
+and compares its label. Details in [docs/terminology.md](docs/terminology.md).
 
 Static enumerations bind their values with `meaning`: DUO for data use, NCIT
 for reporter roles, consent types, genetic test types, ACMG classes and signal
@@ -99,7 +113,7 @@ Every `meaning` was checked against the ontology when written, and
 | Documents/Files | `DocumentFile` |
 | Consent | `Consent` (+ signed form as `DocumentFile`) |
 | Biospecimen / Biobank Information | `Specimen` |
-| Pedigree | `Family`, `FamilyRelationship`; family-history conditions via `Condition.relationship_to_participant` |
+| Pedigree | `Family`, `FamilyRelationship` (enrolled relatives), `FamilyHistory` (relatives who are not enrolled) |
 | Journal | `JournalEntry` (+ source audio as `MediaFile`) |
 | Care Team | `CareTeam`, `CareTeamMember`, `Organization` |
 | Genomic (BAM/VCF) | `GenomicDataFile` |
@@ -108,6 +122,7 @@ Every `meaning` was checked against the ontology when written, and
 | Diagnosis | `Diagnosis` |
 | Medications/Treatments | `DrugExposure` (RxNorm) |
 | Voice, Images, Video | `MediaFile` |
+| *(RD-CDM section 8)* Disability | `DisabilityAssessment` (ICF codes) |
 
 ## Open questions from the inventory
 
@@ -140,7 +155,15 @@ Validate its ontology bindings (queries the EBI Ontology Lookup Service):
 uv run linkml-term-validator validate-data examples/valid/RegistryDataset-rett-example.yaml -s src/rapid_registry_schema/schema/rapid_registry.yaml -t RegistryDataset -c conf/oak_config.yaml
 ```
 
-Run the tests (add `-m "not network"` to skip the OLS-backed ones):
+Check LOINC, RxNorm, HGNC, UCUM, SNOMED CT and CVX codes against their sources
+(SNOMED CT and CVX need a BioPortal key; see docs/terminology.md):
+
+```bash
+uv run python scripts/check_codes.py examples/valid/RegistryDataset-rett-example.yaml
+```
+
+Run the tests (add `-m "not network"` to skip the ones that call OLS and the
+code lookup services):
 
 ```bash
 uv run pytest
