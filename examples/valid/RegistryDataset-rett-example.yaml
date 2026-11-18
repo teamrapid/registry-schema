@@ -1,6 +1,30 @@
 # Synthetic example. The participant is invented; the codes are real and were
 # checked against MONDO/HPO/SO/GENO (OLS), LOINC and UCUM (NLM Clinical Table
 # Search Service), RxNorm (RxNav) and HGNC (genenames.org).
+inventory_entry:
+  id: rapid:inventory/example-rett-2026-11
+  description: Synthetic example batch from an example Rett syndrome registry.
+  data_contributor: rapid:org/example-registry-operator
+  provenance: Patient- and caregiver-reported registry data plus abstracted EHR records.
+  data_type_category:
+    - STRUCTURED
+  permitted_uses:
+    - HMB
+    - IRB
+  access_mode: CONTROLLED
+  hipaa_status: DEIDENTIFIED
+  deidentification_method: SAFE_HARBOR
+  contains_non_us_data: false
+  contains_bulk_sensitive_personal_data: false
+  governing_instruments:
+    - instrument_type: DATA_TRANSFER_AGREEMENT
+      reference: example-DTA-0001
+  access_approval_contact:
+    role: Data access committee
+    organization: rapid:org/example-registry-operator
+  inventory_maintenance_contact:
+    role: Registry data manager
+    organization: rapid:org/example-registry-operator
 registries:
   - id: rapid:registry/example-rett
     name: Example Rett Syndrome Registry
@@ -9,11 +33,15 @@ registries:
       - id: MONDO:0010726
         label: Rett syndrome
 organizations:
+  - id: rapid:org/example-registry-operator
+    name: Example Registry Operator
+    organization_type: REGISTRY_OPERATOR
   - id: rapid:org/example-genetics-lab
     name: Example Clinical Genetics Laboratory
     organization_type: LABORATORY
 persons:
   - id: rapid:person/0001
+    mspi: MSPI-EXAMPLE-0001
     year_of_birth: 2016
     vital_status: ALIVE
   - id: rapid:person/0002
@@ -61,6 +89,10 @@ consents:
       - HMB
       - IRB
     valid_from: "2020-03-01"
+    consent_version: "2.0"
+    consent_steward: rapid:org/example-registry-operator
+    recontact_permitted: "YES"
+    linkage_permitted: "YES"
 families:
   - id: rapid:family/0001
     family_type: DUO
@@ -141,6 +173,9 @@ measurements:
     observation_type:
       id: LOINC:29463-7
       label: Body weight
+    measured_attribute:
+      id: OBA:VT0001259
+      label: body mass
     value_quantity:
       value_decimal: 18.4
       unit:

@@ -18,6 +18,9 @@ It is also aligned element by element with the rare disease common data model
 
 - [docs/terminology.md](docs/terminology.md) — which vocabulary each value
   uses, how codes are checked, and setting up BioPortal.
+- [docs/governance.md](docs/governance.md) — Data Inventory entries, the
+  program-wide patient index, and consent status, as the RAPID Associate
+  Performer Agreement requires.
 - [docs/rarelink-alignment.md](docs/rarelink-alignment.md) — how the schema
   relates to RareLink and RD-CDM, and the crosswalk in
   [`mappings/rd_cdm_to_rapid.sssom.tsv`](mappings/rd_cdm_to_rapid.sssom.tsv).
@@ -175,6 +178,11 @@ Generate other representations, e.g. JSON Schema, Pydantic or OWL:
 ```bash
 uv run gen-json-schema src/rapid_registry_schema/schema/rapid_registry.yaml > rapid_registry.schema.json
 ```
+
+## Local reference material
+
+`local/` is git-ignored. Put documents there that inform the model but must
+not be published, such as the RAPID Associate Performer Agreement.
 
 ## Examples
 

@@ -4,3 +4,6 @@ __pycache__/
 project/
 *.pyc
 cache/
+
+# Local reference material, never committed
+local/

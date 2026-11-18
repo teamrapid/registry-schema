@@ -78,6 +78,8 @@ prefixes:
   GA4GH: https://phenopacket-schema.readthedocs.io/en/latest/
   rdcdm: https://github.com/BIH-CEI/rd-cdm/
   rarelink: https://github.com/BIH-CEI/rarelink/
+  OBA: http://purl.obolibrary.org/obo/OBA_
+  valuesets: https://w3id.org/valuesets/
   UCUM: https://units-of-measurement.org/
   bioregistry: https://bioregistry.io/registry/
 
@@ -102,6 +104,12 @@ classes:
       data submission validates against; every record in it is listed in the
       collection for its type and refers to other records by id.
     attributes:
+      inventory_entry:
+        range: DataInventoryEntry
+        inlined: true
+        description: >-
+          The Data Inventory entry this batch is delivered under. Required by
+          the RAPID Associate Performer Agreement before any transfer.
       registries:
         range: Registry
         multivalued: true
@@ -392,6 +400,121 @@ classes:
       comparator:
         range: QuantityComparatorEnum
 
+  # ---- data inventory (governance) ---------------------------------------
+
+  DataInventoryEntry:
+    is_a: Entity
+    description: >-
+      Governance metadata for one contributed dataset, following the minimum
+      fields of the RAPID Data Inventory schema (Annex B of the RAPID Associate
+      Performer Agreement): what the contribution is and where it came from,
+      who may use it and how, its HIPAA status and de-identification basis,
+      restrictions, governing instruments, contacts, recontact and data return.
+      It describes the dataset as a whole, not any participant.
+    attributes:
+      description:
+        required: true
+      data_contributor:
+        range: Organization
+        required: true
+        description: Organization that originates or contributes the data and holds the right to do so.
+      provenance:
+        description: How and from what source the data were collected, enough to identify the contribution.
+      data_type_category:
+        range: RapidDataTypeEnum
+        multivalued: true
+      version:
+        description: Version identifier, for a versioned release.
+      persistent_identifier:
+        range: uriorcurie
+        description: Persistent identifier of the dataset or release.
+      permitted_recipients:
+        description: Who may receive the data, including onward-sharing permissions.
+      permitted_uses:
+        range: DataUseEnum
+        multivalued: true
+        description: Permitted purposes, in DUO terms.
+      permitted_uses_description:
+        description: Permitted purposes not expressible in DUO.
+      access_mode:
+        range: AccessModeEnum
+      safeguards:
+        description: Safeguards that apply to access.
+      hipaa_status:
+        range: HipaaStatusEnum
+        required: true
+      deidentification_method:
+        range: DeidentificationMethodEnum
+      contains_non_us_data:
+        range: boolean
+      contains_bulk_sensitive_personal_data:
+        range: boolean
+      restrictions:
+        description: Consent, use, security, retention and withdrawal restrictions.
+      retention_period:
+        description: Retention period set by the strictest applicable term.
+      governing_instruments:
+        range: GoverningInstrument
+        multivalued: true
+        inlined_as_list: true
+      access_approval_contact:
+        range: ContactRole
+        inlined: true
+      inventory_maintenance_contact:
+        range: ContactRole
+        inlined: true
+      recontact:
+        range: RecontactProvision
+        inlined: true
+      data_return:
+        range: DataReturnProvision
+        inlined: true
+      privacy_risk_assessment:
+        description: Determination and basis of any combined-data privacy risk assessment.
+
+  GoverningInstrument:
+    description: A source term, permission or agreement that governs a dataset.
+    attributes:
+      instrument_type:
+        range: GoverningInstrumentTypeEnum
+        required: true
+      reference:
+        description: Identifier or citation for the instrument (never its confidential text).
+
+  ContactRole:
+    description: >-
+      A contact for a governance function, recorded as a role and an
+      organization rather than a named person.
+    attributes:
+      role:
+        required: true
+      organization:
+        range: Organization
+      contact_point:
+        description: Functional mailbox or URL for the role.
+
+  RecontactProvision:
+    description: How participants in a dataset may be recontacted.
+    attributes:
+      originating_organization:
+        range: Organization
+      authorized_pathway:
+      consent_restrictions:
+      coordination_contact:
+        range: ContactRole
+        inlined: true
+
+  DataReturnProvision:
+    description: What is returned to the contributing registry, and how.
+    attributes:
+      contributing_organization:
+        range: Organization
+      authorized_outputs:
+        multivalued: true
+      delivery_mechanism:
+      frequency:
+      attribution_requirements:
+
   # ---- registry and organizations ----------------------------------------
 
   Registry:
@@ -450,6 +573,12 @@ classes:
       Participant in several registries; record linkage across registries
       happens at this level.
     class_uri: fhir:Patient
+    slot_usage:
+      external_identifiers:
+        description: >-
+          Identifiers for the same individual in source systems. Linkage tokens
+          are never stored here: the APA keeps them with the Linkage Honest
+          Broker, separate from clinical data.
     exact_mappings:
       - bdchm:Person
       - cmdr:Subject
@@ -462,6 +591,11 @@ classes:
         description: >-
           NCBI Taxonomy term for the species. Absent means Homo sapiens
           (NCBITaxon:9606).
+      mspi:
+        description: >-
+          Master Study Patient Index: the program-wide pseudonymous identifier
+          minted by the RAPID Linkage Honest Broker, used to link one person's
+          records and consent status across contributors.
       year_of_birth:
         range: integer
         minimum_value: 1900
@@ -567,7 +701,8 @@ classes:
         description: Household income band as collected by the registry. Optional.
         slot_uri: NCIT:C41150
       educational_attainment:
-        description: Highest education level as collected by the registry. Optional.
+        range: EducationalAttainmentEnum
+        description: Highest education level, where collected. Optional.
       insurance_type:
         description: Health insurance coverage type, where collected. Optional.
 
@@ -628,6 +763,20 @@ classes:
         range: date
       valid_to:
         range: date
+      consent_version:
+        description: Version of the consent form or terms the participant agreed to.
+      consent_steward:
+        range: Organization
+        description: Organization holding the authoritative consent record.
+      withdrawal_date:
+        range: date
+      recontact_permitted:
+        range: YesNoUnknownEnum
+      recontact_pathway:
+        description: The authorized pathway for recontact, if permitted.
+      linkage_permitted:
+        range: YesNoUnknownEnum
+        description: Whether the consent permits linkage across data contributors.
       consent_document:
         range: DocumentFile
         description: The signed form, if stored (often a PDF).
@@ -1088,6 +1237,18 @@ classes:
         range: ObservationCodeConcept
         required: true
         inlined: true
+      measured_attribute:
+        range: Concept
+        inlined: true
+        description: >-
+          The biological attribute the observation measures, as an OBA term
+          (e.g. OBA:VT0001259 body mass for a LOINC body weight result). The
+          LOINC code identifies the test; OBA identifies the trait, so results
+          from different tests of the same trait can be grouped.
+        bindings:
+          - binds_value_of: id
+            range: BiologicalAttributeTerm
+            obligation_level: REQUIRED
       value_string:
       value_boolean:
         range: boolean
@@ -1281,6 +1442,14 @@ classes:
         range: LoincConcept
         required: true
         inlined: true
+      measured_attribute:
+        range: Concept
+        inlined: true
+        description: The biological attribute measured, as an OBA term.
+        bindings:
+          - binds_value_of: id
+            range: BiologicalAttributeTerm
+            obligation_level: REQUIRED
       age_at_end:
         range: integer
         unit:
@@ -1497,6 +1666,11 @@ classes:
       media_type:
         range: MediaTypeEnum
         required: true
+      retained_at_source:
+        range: boolean
+        description: >-
+          True when the file stays with the data contributor and only its
+          metadata is shared (inherently identifiable media, per the APA).
       content:
         range: MediaContentEnum
       body_site:
@@ -1675,6 +1849,16 @@ enums:
       source_ontology: obo:hp
       source_nodes:
         - HP:0003674  # Onset
+      relationship_types:
+        - rdfs:subClassOf
+      include_self: false
+
+  BiologicalAttributeTerm:
+    description: Measurable biological attributes from the Ontology of Biological Attributes (OBA).
+    reachable_from:
+      source_ontology: obo:oba
+      source_nodes:
+        - OBA:0000001  # biological attribute
       relationship_types:
         - rdfs:subClassOf
       include_self: false
@@ -1957,7 +2141,12 @@ enums:
       OTHER:
 
   DataUseEnum:
-    description: Data use permissions from the Data Use Ontology (DUO), as in BDCHM.
+    description: >-
+      Data use permissions and modifiers from the Data Use Ontology (DUO): the
+      BDCHM set, plus the remaining modifiers in the LinkML valuesets
+      DataUseModifierEnum.
+    exact_mappings:
+      - valuesets:DataUseModifierEnum
     permissible_values:
       GRU:
         description: General research use.
@@ -1979,6 +2168,21 @@ enums:
         description: Ethics approval required.
         title: ethics approval required
         meaning: DUO:0000021
+      NRES:
+        title: no restriction
+        meaning: DUO:0000004
+      NPO:
+        title: not for profit organisation use only
+        meaning: DUO:0000045
+      NCU:
+        title: non-commercial use only
+        meaning: DUO:0000046
+      NMDS:
+        title: no general methods research
+        meaning: DUO:0000015
+      RS:
+        title: research specific restrictions
+        meaning: DUO:0000012
 
   ConsentTypeEnum:
     permissible_values:
@@ -1996,9 +2200,11 @@ enums:
   ConsentStatusEnum:
     permissible_values:
       ACTIVE:
+      PENDING:
+      SUPERSEDED:
+        description: Replaced by a re-consent.
       WITHDRAWN:
       EXPIRED:
-      PENDING:
 
   # The next five value sets are copied from BDCHM so that data harmonised to
   # either model shares codes.
@@ -2435,11 +2641,62 @@ enums:
       OTHER:
 
   DeidentificationStatusEnum:
+    description: HIPAA status of a single file; the dataset-level status is DataInventoryEntry.hipaa_status.
     permissible_values:
-      IDENTIFIED:
-      DEIDENTIFIED:
+      IDENTIFIABLE:
       LIMITED_DATA_SET:
+      DEIDENTIFIED:
+      NOT_PHI:
       NOT_ASSESSED:
+
+  HipaaStatusEnum:
+    description: HIPAA classification of a dataset, as the RAPID Data Inventory records it.
+    permissible_values:
+      NOT_PHI:
+      IDENTIFIABLE:
+      LIMITED_DATA_SET:
+      DEIDENTIFIED:
+
+  DeidentificationMethodEnum:
+    permissible_values:
+      SAFE_HARBOR:
+        description: HIPAA Safe Harbor method, 45 CFR 164.514(b)(2).
+      EXPERT_DETERMINATION:
+        description: HIPAA Expert Determination method, 45 CFR 164.514(b)(1).
+      NOT_APPLICABLE:
+
+  RapidDataTypeEnum:
+    description: Data types the RAPID data rights table assigns rights to.
+    permissible_values:
+      TOKENIZED:
+        description: Tokenized datasets.
+      STRUCTURED:
+        description: Structured, cleaned or algorithmically de-identified datasets.
+      HARMONIZED:
+        description: Harmonized datasets.
+      DEIDENTIFIED_LINKED:
+        description: De-identified linked data.
+      VERSIONED:
+        description: Versioned datasets.
+
+  AccessModeEnum:
+    permissible_values:
+      OPEN:
+      REGISTERED:
+      CONTROLLED:
+      SOURCE_SIDE_ONLY:
+        description: Data stay at the source; analysis runs there and only approved outputs leave.
+
+  GoverningInstrumentTypeEnum:
+    permissible_values:
+      DATA_USE_AGREEMENT:
+      DATA_TRANSFER_AGREEMENT:
+      INTERCONNECTION_SECURITY_AGREEMENT:
+      DATA_LICENSE:
+      PARTICIPANT_CONSENT:
+      IRB_APPROVAL:
+      SOURCE_TERMS:
+      OTHER:
 
   SpecimenTypeEnum:
     permissible_values:
@@ -2522,25 +2779,45 @@ enums:
         exact_mappings: [SNOMEDCT:1220561009]
 
   KaryotypicSexEnum:
-    description: Chromosomal sex (RD-CDM 2.3).
+    description: >-
+      Chromosomal sex (RD-CDM 2.3). exact_mappings give RareLink's SNOMED CT
+      codes; meanings are the NCIT terms from the LinkML valuesets
+      KaryotypicSexEnum, except XXYY, whose valuesets meaning is a syndrome
+      rather than a karyotype and is not used.
     permissible_values:
       XX:
+        title: "XX Genotype"
+        meaning: NCIT:C45976
         exact_mappings: [SNOMEDCT:734875008]
       XY:
+        title: "XY Genotype"
+        meaning: NCIT:C45977
         exact_mappings: [SNOMEDCT:734876009]
       X0:
+        title: "45,XO Karyotype"
+        meaning: NCIT:C176780
         exact_mappings: [SNOMEDCT:80427008]
       XXY:
+        title: "47,XXY Karyotype"
+        meaning: NCIT:C176784
         exact_mappings: [SNOMEDCT:65162001]
       XXX:
+        title: "47,XXX Karyotype"
+        meaning: NCIT:C176785
         exact_mappings: [SNOMEDCT:35111009]
       XXYY:
         exact_mappings: [SNOMEDCT:403760006]
       XXXY:
+        title: "48,XXXY Karyotype"
+        meaning: NCIT:C176786
         exact_mappings: [SNOMEDCT:78317008]
       XXXX:
+        title: "48,XXXX Karyotype"
+        meaning: NCIT:C176787
         exact_mappings: [SNOMEDCT:10567003]
       XYY:
+        title: "47,XYY Karyotype"
+        meaning: NCIT:C176782
         exact_mappings: [SNOMEDCT:48930007]
       OTHER:
         exact_mappings: [SNOMEDCT:74964007]
@@ -2588,7 +2865,11 @@ enums:
       HEALTH_UNKNOWN:
 
   InterpretationProgressStatusEnum:
-    description: GA4GH Phenopackets Interpretation.progress_status (RD-CDM 6.1.2).
+    description: >-
+      GA4GH Phenopackets Interpretation.progress_status (RD-CDM 6.1.2). Left
+      without meanings: the NCIT terms in the LinkML valuesets
+      InterpretationProgressEnum name other concepts (SOLVED is "Molecular
+      Diagnosis", UNSOLVED is "Clinical Interpretation").
     permissible_values:
       UNKNOWN_PROGRESS:
       IN_PROGRESS:
@@ -2606,11 +2887,19 @@ enums:
       CAUSATIVE:
 
   TherapeuticActionabilityEnum:
-    description: GA4GH Phenopackets VariantInterpretation.therapeutic_actionability (RD-CDM 6.1.15).
+    description: >-
+      GA4GH Phenopackets VariantInterpretation.therapeutic_actionability
+      (RD-CDM 6.1.15); meanings from the LinkML valuesets enum of the same name.
+    exact_mappings:
+      - valuesets:TherapeuticActionabilityEnum
     permissible_values:
       UNKNOWN_ACTIONABILITY:
       NOT_ACTIONABLE:
+        title: Non-Actionable Variation
+        meaning: NCIT:C206304
       ACTIONABLE:
+        title: Actionable Variation
+        meaning: NCIT:C206303
 
   StructuralVariantMethodEnum:
     description: Structural variant analysis method, LOINC 81304-8 answers (RD-CDM 6.1.4).
@@ -2653,3 +2942,26 @@ enums:
         exact_mappings: [LOINC:LA30205-1]
       STAND_ALONE:
         exact_mappings: [LOINC:LA30206-9]
+
+  EducationalAttainmentEnum:
+    description: >-
+      Highest level of education completed, from the LinkML valuesets
+      EducationalAttainmentEnum. Only the meanings that name the level itself
+      are kept; the valuesets degree meanings are specific degrees (Bachelor of
+      Arts, Master of Science) and are not used.
+    exact_mappings:
+      - valuesets:EducationalAttainmentEnum
+    permissible_values:
+      EIGHTH_GRADE_OR_LESS:
+      HIGH_SCHOOL_NO_DIPLOMA:
+        title: Not High School Graduate
+        meaning: NCIT:C76123
+      HIGH_SCHOOL_GRADUATE_GED:
+        title: High School Completion
+        meaning: NCIT:C67136
+      SOME_COLLEGE_NO_DEGREE:
+      ASSOCIATE_DEGREE:
+      BACHELORS_DEGREE:
+      MASTERS_DEGREE:
+      DOCTORAL_OR_PROFESSIONAL_DEGREE:
+      UNKNOWN:

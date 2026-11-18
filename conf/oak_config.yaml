@@ -29,3 +29,5 @@ ontology_adapters:
   HL7FHIR: ""
   GA4GH: ""
   rarelink: ""
+  OBA: ols:oba
+  valuesets: ""
