@@ -1,0 +1,2127 @@
+id: https://w3id.org/rapid/registry-schema
+name: rapid_registry
+title: RAPID Rare Disease Registry Schema
+description: >-
+  A LinkML data model for the patient-registry data aggregated under RAPID
+  Technical Area 1 (TA1). It covers every data type listed in the "RAPID TA1
+  Registries & Data Inventory" spreadsheet: standard instruments and custom
+  surveys, self-reported and EHR-derived health information, digital health
+  technologies, genetic tests and genomic files, demographics, diaries and
+  journals, physiological signal recordings (EEG, EKG, ERG), documents, media,
+  consent, biospecimens, pedigrees, care teams, mortality, address, diagnosis
+  and medications.
+
+
+  The model follows two reference models. From the BioData Catalyst Harmonized
+  Model (BDCHM) it takes the Person / Participant / Demography split, the
+  clinical event classes (Condition, Procedure, DrugExposure, Observation,
+  Visit), age-in-days timing, File, Specimen and the OMOP-coded demographic
+  value sets. From the LinkML Core Model for Clinical Data Collection (CMDR) it
+  takes the Family / Relationship / proband pattern, Organization and the
+  generic Entity base.
+
+
+  Clinical concepts are carried as Concept objects ({id, label}). Where the
+  vocabulary is an OBO ontology the id is bound to a value set with a LinkML
+  `bindings` block, which linkml-term-validator checks against the ontology:
+  MONDO for diseases, HPO for phenotypes and onset, UBERON for anatomy, SO for
+  variant types and GENO for zygosity. Vocabularies with no ontology service
+  the validator can use have a Concept subclass whose id pattern accepts only
+  that vocabulary's codes: LOINC for laboratory tests, vital signs and
+  instruments, RxNorm for medications, CVX for vaccines, SNOMED CT for
+  procedures, allergens and diary symptoms, HGNC for genes and UCUM for units.
+  Static value sets carry `meaning` mappings to DUO (data use), NCIT (roles,
+  consent types, test types, ACMG classes), EDAM (file formats) and OMOP
+  (value sets copied from BDCHM). The code as it arrived from the source
+  system is kept separately in `source_codings`, so harmonisation never
+  discards the original.
+license: MIT
+version: 0.1.0
+status: bibo:draft
+see_also:
+  - https://arpa-h.gov/explore-funding/programs/rapid
+  - https://rtiinternational.github.io/NHLBI-BDC-DMC-HM/
+  - https://linkml.io/cmdr
+
+prefixes:
+  rapid: https://w3id.org/rapid/registry-schema/
+  linkml: https://w3id.org/linkml/
+  schema: http://schema.org/
+  bibo: http://purl.org/ontology/bibo/
+  fhir: http://hl7.org/fhir/
+  bdchm: https://w3id.org/bdchm/
+  cmdr: https://w3id.org/linkml/cmdr/
+  omop_cdm: https://ohdsi.github.io/CommonDataModel/cdm54.html#
+  OMOP: https://athena.ohdsi.org/search-terms/terms/
+  MONDO: http://purl.obolibrary.org/obo/MONDO_
+  HP: http://purl.obolibrary.org/obo/HP_
+  UBERON: http://purl.obolibrary.org/obo/UBERON_
+  GENO: http://purl.obolibrary.org/obo/GENO_
+  SO: http://purl.obolibrary.org/obo/SO_
+  NCIT: http://purl.obolibrary.org/obo/NCIT_
+  NCBITaxon: http://purl.obolibrary.org/obo/NCBITaxon_
+  DUO: http://purl.obolibrary.org/obo/DUO_
+  EDAM: http://edamontology.org/
+  LOINC: https://loinc.org/
+  RXNORM: http://purl.bioontology.org/ontology/RXNORM/
+  SNOMEDCT: http://snomed.info/id/
+  CVX: http://hl7.org/fhir/sid/cvx/
+  HGNC: http://identifiers.org/hgnc/
+  ICD10CM: https://icd.codes/icd10cm/
+  UCUM: https://units-of-measurement.org/
+  bioregistry: https://bioregistry.io/registry/
+
+default_prefix: rapid
+default_range: string
+
+imports:
+  - linkml:types
+
+# ---------------------------------------------------------------------------
+# Classes
+# ---------------------------------------------------------------------------
+
+classes:
+
+  # ---- container ---------------------------------------------------------
+
+  RegistryDataset:
+    tree_root: true
+    description: >-
+      A batch of registry data as delivered by one registry. This is the unit a
+      data submission validates against; every record in it is listed in the
+      collection for its type and refers to other records by id.
+    attributes:
+      registries:
+        range: Registry
+        multivalued: true
+        inlined_as_list: true
+      organizations:
+        range: Organization
+        multivalued: true
+        inlined_as_list: true
+      persons:
+        range: Person
+        multivalued: true
+        inlined_as_list: true
+      participants:
+        range: Participant
+        multivalued: true
+        inlined_as_list: true
+      demographics:
+        range: Demography
+        multivalued: true
+        inlined_as_list: true
+      addresses:
+        range: Address
+        multivalued: true
+        inlined_as_list: true
+      consents:
+        range: Consent
+        multivalued: true
+        inlined_as_list: true
+      families:
+        range: Family
+        multivalued: true
+        inlined_as_list: true
+      family_relationships:
+        range: FamilyRelationship
+        multivalued: true
+        inlined_as_list: true
+      care_teams:
+        range: CareTeam
+        multivalued: true
+        inlined_as_list: true
+      encounters:
+        range: Encounter
+        multivalued: true
+        inlined_as_list: true
+      conditions:
+        range: Condition
+        multivalued: true
+        inlined_as_list: true
+      diagnoses:
+        range: Diagnosis
+        multivalued: true
+        inlined_as_list: true
+      phenotypic_features:
+        range: PhenotypicFeature
+        multivalued: true
+        inlined_as_list: true
+      procedures:
+        range: Procedure
+        multivalued: true
+        inlined_as_list: true
+      drug_exposures:
+        range: DrugExposure
+        multivalued: true
+        inlined_as_list: true
+      allergies:
+        range: AllergyIntolerance
+        multivalued: true
+        inlined_as_list: true
+      immunizations:
+        range: Immunization
+        multivalued: true
+        inlined_as_list: true
+      measurements:
+        range: MeasurementObservation
+        multivalued: true
+        inlined_as_list: true
+      observations:
+        range: Observation
+        multivalued: true
+        inlined_as_list: true
+      questionnaires:
+        range: Questionnaire
+        multivalued: true
+        inlined_as_list: true
+      questionnaire_responses:
+        range: QuestionnaireResponse
+        multivalued: true
+        inlined_as_list: true
+      diary_entries:
+        range: DiaryEntry
+        multivalued: true
+        inlined_as_list: true
+      journal_entries:
+        range: JournalEntry
+        multivalued: true
+        inlined_as_list: true
+      devices:
+        range: Device
+        multivalued: true
+        inlined_as_list: true
+      device_observation_series:
+        range: DeviceObservationSeries
+        multivalued: true
+        inlined_as_list: true
+      genetic_tests:
+        range: GeneticTest
+        multivalued: true
+        inlined_as_list: true
+      genomic_data_files:
+        range: GenomicDataFile
+        multivalued: true
+        inlined_as_list: true
+      physiological_recordings:
+        range: PhysiologicalSignalRecording
+        multivalued: true
+        inlined_as_list: true
+      media_files:
+        range: MediaFile
+        multivalued: true
+        inlined_as_list: true
+      documents:
+        range: DocumentFile
+        multivalued: true
+        inlined_as_list: true
+      specimens:
+        range: Specimen
+        multivalued: true
+        inlined_as_list: true
+      deaths:
+        range: Death
+        multivalued: true
+        inlined_as_list: true
+
+  # ---- base classes ------------------------------------------------------
+
+  Entity:
+    abstract: true
+    description: Any resource that has its own identifier.
+    class_uri: schema:Thing
+    exact_mappings:
+      - bdchm:Entity
+      - cmdr:Entity
+    slots:
+      - id
+      - external_identifiers
+      - source_registry
+
+  ParticipantRecord:
+    abstract: true
+    is_a: Entity
+    description: >-
+      Anything recorded about one registry participant. Carries who supplied
+      the data and how it reached the registry, which the inventory shows
+      varies within a single data type (the same medication list can be
+      self-reported, abstracted from an EHR, or curated).
+    slots:
+      - participant
+      - encounter
+      - data_provenance
+      - reported_by_role
+      - age_at_record
+      - record_date
+      - source_codings
+      - notes
+
+  Concept:
+    description: >-
+      A reference to a term in a controlled vocabulary or ontology. The id is a
+      CURIE; the label is the vocabulary's own label for it. Which vocabulary
+      is allowed is set by a `bindings` block on the slot that uses the
+      Concept.
+    class_uri: fhir:Coding
+    attributes:
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+        description: CURIE of the term, for example MONDO:0007947.
+      label:
+        description: The label the vocabulary assigns to the term.
+      vocabulary_version:
+        description: Release of the vocabulary the code was taken from, where known.
+
+  SnomedCtConcept:
+    is_a: Concept
+    description: A SNOMED CT concept, identified by its SCTID.
+    see_also:
+      - https://bioregistry.io/registry/snomedct
+    slot_usage:
+      id:
+        pattern: "^SNOMEDCT:[0-9]{6,18}$"
+
+  RxNormConcept:
+    is_a: Concept
+    description: >-
+      An RxNorm concept (ingredient, clinical drug or branded drug), identified
+      by its RXCUI.
+    see_also:
+      - https://bioregistry.io/registry/rxnorm
+    slot_usage:
+      id:
+        pattern: "^RXNORM:[0-9]+$"
+
+  SubstanceConcept:
+    is_a: Concept
+    description: An allergen or other substance, coded in RxNorm or SNOMED CT.
+    slot_usage:
+      id:
+        pattern: "^(RXNORM:[0-9]+|SNOMEDCT:[0-9]{6,18})$"
+
+  CvxConcept:
+    is_a: Concept
+    description: A CDC CVX vaccine code.
+    see_also:
+      - https://bioregistry.io/registry/cvx
+    slot_usage:
+      id:
+        pattern: "^CVX:[0-9]{1,3}$"
+
+  ObservationCodeConcept:
+    is_a: Concept
+    description: An observation code in LOINC or SNOMED CT.
+    slot_usage:
+      id:
+        pattern: "^(LOINC:(LP|LG)?[0-9]{1,7}-[0-9]|SNOMEDCT:[0-9]{6,18})$"
+
+  LoincConcept:
+    is_a: ObservationCodeConcept
+    description: >-
+      A LOINC term, Part (LP) or Group (LG). The label should be the LOINC Long
+      Common Name. Used for laboratory tests, vital signs, device measures and
+      standard-instrument panels.
+    see_also:
+      - https://bioregistry.io/registry/loinc
+    slot_usage:
+      id:
+        pattern: "^LOINC:(LP|LG)?[0-9]{1,7}-[0-9]$"
+
+  HgncGeneConcept:
+    is_a: Concept
+    description: A human gene, identified by its HGNC ID; the label is the approved symbol.
+    see_also:
+      - https://bioregistry.io/registry/hgnc
+    slot_usage:
+      id:
+        pattern: "^HGNC:[0-9]+$"
+
+  UcumUnitConcept:
+    is_a: Concept
+    description: A unit of measure written as a UCUM code, e.g. UCUM:kg.
+    see_also:
+      - https://ucum.org/
+    slot_usage:
+      id:
+        pattern: "^UCUM:\\S+$"
+
+  SymptomConcept:
+    is_a: Concept
+    description: >-
+      A symptom, coded in SNOMED CT (preferred for diaries, per the RAPID data
+      inventory) or HPO.
+    slot_usage:
+      id:
+        pattern: "^(SNOMEDCT:[0-9]{6,18}|HP:[0-9]{7})$"
+
+  Quantity:
+    description: A value with a unit, following the BDCHM Quantity pattern.
+    class_uri: fhir:Quantity
+    exact_mappings:
+      - bdchm:Quantity
+      - cmdr:Quantity
+    attributes:
+      value_decimal:
+        range: decimal
+      value_integer:
+        range: integer
+      unit:
+        range: UcumUnitConcept
+        inlined: true
+      comparator:
+        range: QuantityComparatorEnum
+
+  # ---- registry and organizations ----------------------------------------
+
+  Registry:
+    is_a: Entity
+    description: >-
+      A patient registry, or registry platform, contributing data to RAPID
+      (for example the registries run on Matrix, NORD or Global Genes
+      platforms).
+    exact_mappings:
+      - fhir:ResearchStudy
+    close_mappings:
+      - bdchm:ResearchStudy
+      - cmdr:Study
+    attributes:
+      name:
+        required: true
+      registry_platform:
+        range: RegistryPlatformEnum
+      operated_by:
+        range: Organization
+      disease_focus:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        description: The disease or diseases the registry collects data on.
+        bindings:
+          - binds_value_of: id
+            range: DiseaseTerm
+            obligation_level: REQUIRED
+      url:
+        range: uri
+
+  Organization:
+    is_a: Entity
+    description: A clinic, hospital, laboratory, advocacy group or registry operator.
+    class_uri: fhir:Organization
+    exact_mappings:
+      - bdchm:Organization
+      - cmdr:Organization
+    close_mappings:
+      - omop_cdm:care_site
+    attributes:
+      name:
+        required: true
+      organization_type:
+        range: OrganizationTypeEnum
+      address:
+        range: Address
+
+  # ---- person, participant, demographics ---------------------------------
+
+  Person:
+    is_a: Entity
+    description: >-
+      The individual, independent of any one registry. One Person can be a
+      Participant in several registries; record linkage across registries
+      happens at this level.
+    class_uri: fhir:Patient
+    exact_mappings:
+      - bdchm:Person
+      - cmdr:Subject
+    close_mappings:
+      - omop_cdm:person
+    attributes:
+      species:
+        range: Concept
+        inlined: true
+        description: >-
+          NCBI Taxonomy term for the species. Absent means Homo sapiens
+          (NCBITaxon:9606).
+      year_of_birth:
+        range: integer
+        minimum_value: 1900
+      vital_status:
+        range: VitalStatusEnum
+
+  Participant:
+    is_a: Entity
+    description: >-
+      A Person's enrolment in one registry. Clinical records hang off the
+      Participant so that each fact stays attributable to the registry it came
+      from.
+    exact_mappings:
+      - bdchm:Participant
+      - cmdr:StudyParticipant
+    close_mappings:
+      - fhir:ResearchSubject
+    attributes:
+      associated_person:
+        range: Person
+        required: true
+      registry:
+        range: Registry
+        required: true
+      enrollment_date:
+        range: date
+      age_at_enrollment:
+        range: integer
+        description: Age in days at enrolment.
+        unit:
+          ucum_code: d
+      index_event:
+        description: >-
+          The event the registry uses as day 0 for any date-shifted or
+          offset timings (BDCHM index_timepoint), for example "date of
+          enrolment" or "date of birth".
+      is_proband:
+        range: boolean
+      affected_status:
+        range: AffectedStatusEnum
+      consents:
+        range: Consent
+        multivalued: true
+      care_team:
+        range: CareTeam
+
+  Demography:
+    is_a: ParticipantRecord
+    description: >-
+      "General Information (Demographics +)". Core fields are required to be
+      coded with the OMB/OMOP value sets used by BDCHM; the socioeconomic
+      fields are optional because each registry decides whether to collect
+      them.
+    exact_mappings:
+      - bdchm:Demography
+    attributes:
+      sex:
+        range: SexEnum
+      race:
+        range: RaceEnum
+        multivalued: true
+      ethnicity:
+        range: EthnicityEnum
+      primary_language:
+        description: ISO 639-1 language code.
+        pattern: "^[a-z]{2}$"
+      household_income_range:
+        description: Household income band as collected by the registry. Optional.
+        slot_uri: NCIT:C41150
+      educational_attainment:
+        description: Highest education level as collected by the registry. Optional.
+      insurance_type:
+        description: Health insurance coverage type, where collected. Optional.
+
+  Address:
+    is_a: ParticipantRecord
+    description: >-
+      Coarse location of the participant. The inventory notes that registries
+      typically hold only a postal code; store at most a three-digit ZIP or the
+      equivalent coarse code to keep the data de-identified.
+    class_uri: fhir:Address
+    close_mappings:
+      - omop_cdm:location
+    attributes:
+      country:
+        description: ISO 3166-1 alpha-2 country code.
+        slot_uri: NCIT:C25464
+        pattern: "^[A-Z]{2}$"
+      state_or_region:
+        description: ISO 3166-2 subdivision code, where collected.
+      postal_code:
+        slot_uri: NCIT:C25621
+        description: >-
+          Postal code. For US addresses use the first three digits of the ZIP
+          code only.
+      address_use:
+        range: AddressUseEnum
+
+  Consent:
+    is_a: ParticipantRecord
+    description: >-
+      A consent, assent or permission recorded by the registry, with the data
+      use terms it grants expressed in the Data Use Ontology (DUO).
+    class_uri: fhir:Consent
+    exact_mappings:
+      - bdchm:Consent
+    attributes:
+      consent_type:
+        range: ConsentTypeEnum
+        required: true
+      signed_by_role:
+        range: ReporterRoleEnum
+        description: Who gave consent (the patient, a parent, a legal guardian).
+      consent_status:
+        range: ConsentStatusEnum
+      data_use_permission:
+        range: DataUseEnum
+        multivalued: true
+      disease_restriction:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        description: Disease the DUO "disease-specific research" permission applies to.
+        bindings:
+          - binds_value_of: id
+            range: DiseaseTerm
+            obligation_level: REQUIRED
+      valid_from:
+        range: date
+      valid_to:
+        range: date
+      consent_document:
+        range: DocumentFile
+        description: The signed form, if stored (often a PDF).
+
+  # ---- family / pedigree ---------------------------------------------------
+
+  Family:
+    is_a: Entity
+    description: >-
+      A family unit recorded by a registry. The inventory notes pedigree data is
+      sparse and usually limited to the nuclear family, so members may be
+      listed without any relationships.
+    exact_mappings:
+      - cmdr:Family
+    attributes:
+      family_type:
+        range: FamilyTypeEnum
+      members:
+        range: Participant
+        multivalued: true
+      probands:
+        range: Participant
+        multivalued: true
+      pedigree_file:
+        range: DocumentFile
+        description: A pedigree drawing or file as supplied, if any.
+
+  FamilyRelationship:
+    is_a: Entity
+    description: >-
+      A relationship between two participants, read as "relative is the
+      <relationship> of participant".
+    exact_mappings:
+      - cmdr:Relationship
+    close_mappings:
+      - fhir:FamilyMemberHistory
+    attributes:
+      participant:
+        range: Participant
+        required: true
+      relative:
+        range: Participant
+        required: true
+      relationship:
+        range: FamilyRelationshipEnum
+        required: true
+
+  # ---- care team and encounters -------------------------------------------
+
+  CareTeam:
+    is_a: ParticipantRecord
+    description: >-
+      The clinicians caring for a participant, recorded by the registry as
+      qualified for a particular disease.
+    class_uri: fhir:CareTeam
+    attributes:
+      members:
+        range: CareTeamMember
+        multivalued: true
+        inlined_as_list: true
+
+  CareTeamMember:
+    description: One member of a care team.
+    close_mappings:
+      - omop_cdm:provider
+    attributes:
+      role:
+        range: CareTeamRoleEnum
+      specialty:
+        description: Specialty, ideally as a NUCC provider taxonomy code.
+      organization:
+        range: Organization
+        description: Clinic or institution where the member practises.
+      qualified_for_disease:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        bindings:
+          - binds_value_of: id
+            range: DiseaseTerm
+            obligation_level: REQUIRED
+
+  Encounter:
+    is_a: ParticipantRecord
+    description: A healthcare encounter, as reported in the EHR or by the patient.
+    class_uri: fhir:Encounter
+    exact_mappings:
+      - bdchm:Visit
+    close_mappings:
+      - omop_cdm:visit_occurrence
+    attributes:
+      encounter_class:
+        range: EncounterClassEnum
+      age_at_end:
+        range: integer
+        unit:
+          ucum_code: d
+      care_site:
+        range: Organization
+
+  # ---- health information --------------------------------------------------
+
+  Condition:
+    is_a: ParticipantRecord
+    description: >-
+      A condition, problem or diagnosis entry from health information or the
+      EHR (USCDI "Problems"). Rare disease diagnoses that the registry is built
+      around use the Diagnosis subclass.
+    class_uri: fhir:Condition
+    exact_mappings:
+      - bdchm:Condition
+    close_mappings:
+      - omop_cdm:condition_occurrence
+    attributes:
+      condition_concept:
+        range: Concept
+        required: true
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: ConditionTerm
+            obligation_level: REQUIRED
+      clinical_status:
+        range: ClinicalStatusEnum
+      severity:
+        range: ConditionSeverityEnum
+      age_at_onset:
+        range: integer
+        unit:
+          ucum_code: d
+      onset_category:
+        range: Concept
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: OnsetTerm
+            obligation_level: REQUIRED
+      age_at_resolution:
+        range: integer
+        unit:
+          ucum_code: d
+      relationship_to_participant:
+        range: FamilyRelationshipEnum
+        description: >-
+          Set when the condition is family history, i.e. it belongs to a
+          relative rather than the participant (BDCHM pattern).
+      body_site:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        bindings:
+          - binds_value_of: id
+            range: AnatomyTerm
+            obligation_level: REQUIRED
+
+  Diagnosis:
+    is_a: Condition
+    description: >-
+      A diagnosis of the disease, usually rare, that brought the participant to
+      the registry. Distinguished from an ordinary Condition by its
+      certainty, the basis for it and, where genetic, the test that confirmed
+      it. Corresponds to a Phenopackets Disease element.
+    slot_usage:
+      condition_concept:
+        bindings:
+          - binds_value_of: id
+            range: DiseaseTerm
+            obligation_level: REQUIRED
+    attributes:
+      diagnosis_status:
+        range: DiagnosisStatusEnum
+      diagnosis_basis:
+        range: DiagnosisBasisEnum
+        multivalued: true
+      age_at_diagnosis:
+        range: integer
+        unit:
+          ucum_code: d
+      confirmed_by_genetic_test:
+        range: GeneticTest
+
+  PhenotypicFeature:
+    is_a: ParticipantRecord
+    description: >-
+      A sign or symptom coded to the Human Phenotype Ontology, including
+      phenotype lists recorded at the time of sequencing. Corresponds to a
+      Phenopackets PhenotypicFeature.
+    attributes:
+      phenotype:
+        range: Concept
+        required: true
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: PhenotypeTerm
+            obligation_level: REQUIRED
+      excluded:
+        range: boolean
+        description: True when the feature was looked for and found absent.
+      onset_category:
+        range: Concept
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: OnsetTerm
+            obligation_level: REQUIRED
+      age_at_onset:
+        range: integer
+        unit:
+          ucum_code: d
+      severity:
+        range: ConditionSeverityEnum
+
+  Procedure:
+    is_a: ParticipantRecord
+    description: A procedure, treatment or therapy that is not a medication.
+    class_uri: fhir:Procedure
+    exact_mappings:
+      - bdchm:Procedure
+    close_mappings:
+      - omop_cdm:procedure_occurrence
+    attributes:
+      procedure_concept:
+        range: SnomedCtConcept
+        required: true
+        inlined: true
+      body_site:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        bindings:
+          - binds_value_of: id
+            range: AnatomyTerm
+            obligation_level: REQUIRED
+
+  DrugExposure:
+    is_a: ParticipantRecord
+    description: >-
+      A medication or supplement the participant took, whether from a survey,
+      manually entered health information, or the EHR.
+    class_uri: fhir:MedicationStatement
+    exact_mappings:
+      - bdchm:DrugExposure
+    close_mappings:
+      - omop_cdm:drug_exposure
+    attributes:
+      drug_concept:
+        range: RxNormConcept
+        required: true
+        inlined: true
+        description: RxNorm ingredient or clinical drug where it can be coded.
+      drug_name_as_reported:
+        description: The name as the patient or source wrote it, before coding.
+      is_supplement:
+        range: boolean
+      dose:
+        range: Quantity
+        inlined: true
+      frequency:
+      route:
+        range: DrugRouteEnum
+      age_at_end:
+        range: integer
+        unit:
+          ucum_code: d
+      still_taking:
+        range: boolean
+      indication:
+        range: Concept
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: ConditionTerm
+            obligation_level: REQUIRED
+
+  AllergyIntolerance:
+    is_a: ParticipantRecord
+    description: An allergy or intolerance (USCDI "Allergies and Intolerances").
+    class_uri: fhir:AllergyIntolerance
+    attributes:
+      substance:
+        range: SubstanceConcept
+        required: true
+        inlined: true
+      reaction:
+        range: SymptomConcept
+        multivalued: true
+        inlined_as_list: true
+      severity:
+        range: ConditionSeverityEnum
+
+  Immunization:
+    is_a: ParticipantRecord
+    description: A vaccination (USCDI "Immunizations").
+    class_uri: fhir:Immunization
+    close_mappings:
+      - omop_cdm:drug_exposure
+    attributes:
+      vaccine:
+        range: CvxConcept
+        required: true
+        inlined: true
+      dose_number:
+        range: integer
+
+  Observation:
+    is_a: ParticipantRecord
+    description: >-
+      A generic observation that is not a laboratory result or vital sign,
+      for example a social-determinants answer or a clinical assessment
+      score. Values follow the BDCHM typed-value pattern.
+    class_uri: fhir:Observation
+    exact_mappings:
+      - bdchm:Observation
+    close_mappings:
+      - omop_cdm:observation
+    attributes:
+      observation_type:
+        range: ObservationCodeConcept
+        required: true
+        inlined: true
+      value_string:
+      value_boolean:
+        range: boolean
+      value_quantity:
+        range: Quantity
+        inlined: true
+      value_concept:
+        range: Concept
+        inlined: true
+
+  MeasurementObservation:
+    is_a: Observation
+    description: >-
+      A laboratory test result or vital sign (USCDI "Laboratory" and "Vital
+      Signs"), coded to LOINC with a UCUM unit.
+    exact_mappings:
+      - bdchm:MeasurementObservation
+    close_mappings:
+      - omop_cdm:measurement
+    slot_usage:
+      observation_type:
+        range: LoincConcept
+    attributes:
+      measurement_category:
+        range: MeasurementCategoryEnum
+      range_low:
+        range: Quantity
+        inlined: true
+      range_high:
+        range: Quantity
+        inlined: true
+      interpretation:
+        range: InterpretationEnum
+      specimen:
+        range: Specimen
+
+  # ---- instruments, surveys, diaries ---------------------------------------
+
+  Questionnaire:
+    is_a: Entity
+    description: >-
+      The definition of a standard instrument or a custom survey/form. A
+      standard instrument is identified by its LOINC panel code where one
+      exists; custom forms carry only the registry's own identifier.
+    class_uri: fhir:Questionnaire
+    exact_mappings:
+      - bdchm:Questionnaire
+    attributes:
+      name:
+        required: true
+      instrument_type:
+        range: InstrumentTypeEnum
+        required: true
+      instrument_code:
+        range: LoincConcept
+        inlined: true
+      instrument_version:
+      intended_respondents:
+        range: ReporterRoleEnum
+        multivalued: true
+        description: >-
+          Who the instrument is designed to be completed by. The inventory
+          lists clinician, researcher, patient, caregiver and third-party
+          observer.
+      copyright_notice:
+        description: >-
+          Owner's copyright or licence notice for a third-party instrument,
+          copied verbatim. Never reproduce the instrument's items.
+      items:
+        range: QuestionnaireItem
+        multivalued: true
+        inlined_as_list: true
+
+  QuestionnaireItem:
+    description: One question in a questionnaire.
+    exact_mappings:
+      - bdchm:QuestionnaireItem
+    attributes:
+      link_id:
+        identifier: true
+        description: Identifier of the item, unique within its questionnaire.
+      text:
+      item_code:
+        range: LoincConcept
+        inlined: true
+        description: LOINC question code, where the item has one.
+      answer_type:
+        range: AnswerTypeEnum
+
+  QuestionnaireResponse:
+    is_a: ParticipantRecord
+    description: One completed instrument or survey.
+    class_uri: fhir:QuestionnaireResponse
+    exact_mappings:
+      - bdchm:QuestionnaireResponse
+    attributes:
+      questionnaire:
+        range: Questionnaire
+        required: true
+      completion_status:
+        range: CompletionStatusEnum
+      items:
+        range: QuestionnaireResponseItem
+        multivalued: true
+        inlined_as_list: true
+
+  QuestionnaireResponseItem:
+    description: The answer to one questionnaire item.
+    exact_mappings:
+      - bdchm:QuestionnaireResponseItem
+    attributes:
+      link_id:
+        required: true
+      value_string:
+      value_boolean:
+        range: boolean
+      value_integer:
+        range: integer
+      value_decimal:
+        range: decimal
+      value_date:
+        range: date
+      value_concept:
+        range: Concept
+        inlined: true
+
+  DiaryEntry:
+    is_a: ParticipantRecord
+    description: >-
+      A symptom or activity diary entry. The inventory asks for these to be
+      coded with SNOMED CT where possible; HPO codes are also accepted.
+    class_uri: NCIT:C115589
+    attributes:
+      entry_kind:
+        range: DiaryEntryKindEnum
+        required: true
+      symptom:
+        range: SymptomConcept
+        multivalued: true
+        inlined_as_list: true
+      activity:
+        description: Activity in the patient's or caregiver's words.
+      severity_score:
+        range: integer
+        description: Severity on the scale the diary uses (record the scale in notes).
+      duration:
+        range: Quantity
+        inlined: true
+      free_text:
+
+  JournalEntry:
+    is_a: ParticipantRecord
+    description: >-
+      A free-text journal entry, typically produced by speech-to-text. The
+      original audio, if kept, is a MediaFile.
+    attributes:
+      text:
+        required: true
+      transcription_method:
+        range: TranscriptionMethodEnum
+      source_audio:
+        range: MediaFile
+
+  # ---- digital health technologies -----------------------------------------
+
+  Device:
+    is_a: Entity
+    description: A digital health technology, such as a wearable, that produces data.
+    class_uri: fhir:Device
+    close_mappings:
+      - bdchm:DeviceExposure
+      - omop_cdm:device_exposure
+    attributes:
+      device_type:
+        range: DeviceTypeEnum
+        required: true
+      manufacturer:
+      model:
+      firmware_version:
+
+  DeviceObservationSeries:
+    is_a: ParticipantRecord
+    description: >-
+      Data from a digital health technology over a period: either summarised
+      values (daily steps, mean heart rate) or a pointer to the raw data file.
+    attributes:
+      device:
+        range: Device
+        required: true
+      measure:
+        range: LoincConcept
+        required: true
+        inlined: true
+      age_at_end:
+        range: integer
+        unit:
+          ucum_code: d
+      sampling_interval:
+        range: Quantity
+        inlined: true
+      summary_value:
+        range: Quantity
+        inlined: true
+      summary_statistic:
+        range: SummaryStatisticEnum
+      data_file:
+        range: DataFile
+
+  # ---- genetics ------------------------------------------------------------
+
+  GeneticTest:
+    is_a: ParticipantRecord
+    description: >-
+      A clinical or research genetic test. Raw reports (usually PDF) attach
+      as report_file; curated results, abstracted by a curator, go in
+      findings.
+    close_mappings:
+      - fhir:DiagnosticReport
+    attributes:
+      test_type:
+        range: GeneticTestTypeEnum
+        required: true
+      performing_laboratory:
+        range: Organization
+      genes_tested:
+        range: HgncGeneConcept
+        multivalued: true
+        inlined_as_list: true
+      overall_result:
+        range: GeneticTestResultEnum
+      findings:
+        range: GeneticFinding
+        multivalued: true
+        inlined_as_list: true
+      report_file:
+        range: DocumentFile
+      is_curated:
+        range: boolean
+        description: True when the result was abstracted by a curator from the raw report.
+
+  GeneticFinding:
+    description: >-
+      One variant reported by a genetic test, with its interpretation.
+      Corresponds to a Phenopackets VariantInterpretation.
+    close_mappings:
+      - fhir:Observation
+    attributes:
+      gene:
+        range: HgncGeneConcept
+        inlined: true
+      hgvs_c:
+        description: Coding DNA HGVS expression including transcript, e.g. NM_000138.5:c.1A>G.
+      hgvs_p:
+        description: Protein HGVS expression.
+      hgvs_g:
+        description: Genomic HGVS expression.
+      reference_genome:
+        range: ReferenceGenomeEnum
+      variant_type:
+        range: Concept
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: VariantTypeTerm
+            obligation_level: REQUIRED
+      zygosity:
+        range: Concept
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: ZygosityTerm
+            obligation_level: REQUIRED
+      allele_origin:
+        range: AlleleOriginEnum
+      acmg_classification:
+        range: ACMGClassificationEnum
+      associated_condition:
+        range: Concept
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: DiseaseTerm
+            obligation_level: REQUIRED
+      clinvar_variation_id:
+        pattern: "^[0-9]+$"
+
+  # ---- files ---------------------------------------------------------------
+
+  DataFile:
+    is_a: ParticipantRecord
+    description: >-
+      Any file linked to a participant. Follows BDCHM File. The specialised
+      subclasses add what each kind of file needs.
+    exact_mappings:
+      - bdchm:File
+    close_mappings:
+      - fhir:DocumentReference
+    attributes:
+      file_name:
+        required: true
+      file_format:
+        range: FileFormatEnum
+        required: true
+      data_category:
+        range: DataCategoryEnum
+        required: true
+      file_size:
+        range: integer
+        description: Size in bytes.
+      md5sum:
+        pattern: "^[a-f0-9]{32}$"
+      file_location:
+        range: uri
+        description: Where the file is stored (object store URI or DRS URI).
+      deidentification_status:
+        range: DeidentificationStatusEnum
+      derived_from:
+        range: DataFile
+
+  DocumentFile:
+    is_a: DataFile
+    description: >-
+      A document uploaded by a patient, caregiver, clinician or researcher, or
+      received from the EHR: reports, letters, raw genetic test reports,
+      signed consent forms, pedigree drawings.
+    exact_mappings:
+      - bdchm:Document
+    close_mappings:
+      - omop_cdm:note
+    attributes:
+      document_type:
+
+  GenomicDataFile:
+    is_a: DataFile
+    description: >-
+      A raw or processed genomic data file (BAM, CRAM, VCF, FASTQ) linked to a
+      participant.
+    attributes:
+      sequencing_strategy:
+        range: GeneticTestTypeEnum
+      reference_genome:
+        range: ReferenceGenomeEnum
+      genetic_test:
+        range: GeneticTest
+      specimen:
+        range: Specimen
+      phenotypes_at_sequencing:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        description: HPO phenotype list recorded when the sample was sequenced.
+        bindings:
+          - binds_value_of: id
+            range: PhenotypeTerm
+            obligation_level: REQUIRED
+
+  PhysiologicalSignalRecording:
+    is_a: DataFile
+    description: >-
+      An EEG, EKG/ECG or electroretinogram recording. EEG is converted to EDF;
+      any video track is dropped unless it is de-identified.
+    attributes:
+      modality:
+        range: PhysiologicalSignalModalityEnum
+        required: true
+      duration:
+        range: Quantity
+        inlined: true
+      channel_count:
+        range: integer
+      sampling_rate_hz:
+        range: decimal
+      video_retained:
+        range: boolean
+
+  MediaFile:
+    is_a: DataFile
+    description: >-
+      An image, video or voice recording, such as a facial photograph, medical
+      image, retinal image, gait video or voice sample.
+    close_mappings:
+      - bdchm:ImagingFile
+      - fhir:Media
+    attributes:
+      media_type:
+        range: MediaTypeEnum
+        required: true
+      content:
+        range: MediaContentEnum
+      body_site:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        bindings:
+          - binds_value_of: id
+            range: AnatomyTerm
+            obligation_level: REQUIRED
+      duration:
+        range: Quantity
+        inlined: true
+
+  # ---- biospecimens --------------------------------------------------------
+
+  Specimen:
+    is_a: ParticipantRecord
+    description: >-
+      Information about a biospecimen held in a biobank. The specimen itself is
+      not stored by the registry; this records where it is and what it is.
+      A reduced form of BDCHM Specimen.
+    class_uri: fhir:Specimen
+    exact_mappings:
+      - bdchm:Specimen
+    close_mappings:
+      - omop_cdm:specimen
+    attributes:
+      specimen_type:
+        range: SpecimenTypeEnum
+      anatomical_site:
+        range: Concept
+        inlined: true
+        bindings:
+          - binds_value_of: id
+            range: AnatomyTerm
+            obligation_level: REQUIRED
+      biobank:
+        range: Organization
+      biobank_specimen_id:
+      parent_specimen:
+        range: Specimen
+      quantity:
+        range: Quantity
+        inlined: true
+      available_for_research:
+        range: boolean
+
+  # ---- mortality -----------------------------------------------------------
+
+  Death:
+    is_a: ParticipantRecord
+    description: >-
+      A report of the participant's death. The inventory notes these are
+      mostly self-reports by family and that cause of death is not always
+      captured.
+    close_mappings:
+      - omop_cdm:death
+    attributes:
+      age_at_death:
+        range: integer
+        unit:
+          ucum_code: d
+      year_of_death:
+        range: integer
+      cause_of_death:
+        range: Concept
+        multivalued: true
+        inlined_as_list: true
+        slot_uri: NCIT:C81239
+        bindings:
+          - binds_value_of: id
+            range: ConditionTerm
+            obligation_level: REQUIRED
+      cause_of_death_known:
+        range: boolean
+
+# ---------------------------------------------------------------------------
+# Shared slots
+# ---------------------------------------------------------------------------
+
+slots:
+  id:
+    identifier: true
+    range: uriorcurie
+    required: true
+    description: Identifier of the record, unique within the dataset.
+  external_identifiers:
+    range: uriorcurie
+    multivalued: true
+    description: Identifiers for the same record in other systems.
+  source_registry:
+    range: Registry
+    description: Registry the record was received from.
+  participant:
+    range: Participant
+    required: true
+    description: The registry participant the record is about.
+  encounter:
+    range: Encounter
+  data_provenance:
+    range: DataProvenanceEnum
+    description: How the data reached the registry.
+  reported_by_role:
+    range: ReporterRoleEnum
+    description: Who supplied or completed the data.
+  age_at_record:
+    range: integer
+    description: >-
+      Age of the participant, in days, when the event occurred or the record
+      starts (BDCHM uses age in days for every event timing).
+    unit:
+      ucum_code: d
+  record_date:
+    range: date
+    description: >-
+      Calendar date of the event, if the registry shares dates. May be
+      date-shifted; see Participant.index_event.
+  source_codings:
+    range: Concept
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      The codes as they arrived from the source system (for example ICD-10-CM,
+      SNOMED CT or a local code), kept alongside the harmonised concept.
+  notes:
+    description: Free-text comments.
+
+# ---------------------------------------------------------------------------
+# Value sets bound to ontologies (used in `bindings`)
+# ---------------------------------------------------------------------------
+
+enums:
+
+  DiseaseTerm:
+    description: Human diseases from MONDO.
+    reachable_from:
+      source_ontology: obo:mondo
+      source_nodes:
+        - MONDO:0700096  # human disease
+      relationship_types:
+        - rdfs:subClassOf
+      include_self: false
+
+  PhenotypeTerm:
+    description: Phenotypic abnormalities from the Human Phenotype Ontology.
+    reachable_from:
+      source_ontology: obo:hp
+      source_nodes:
+        - HP:0000118  # Phenotypic abnormality
+      relationship_types:
+        - rdfs:subClassOf
+      include_self: false
+
+  OnsetTerm:
+    description: Age-of-onset categories from the HPO Onset branch.
+    reachable_from:
+      source_ontology: obo:hp
+      source_nodes:
+        - HP:0003674  # Onset
+      relationship_types:
+        - rdfs:subClassOf
+      include_self: false
+
+  ConditionTerm:
+    description: >-
+      Harmonised condition codes: a MONDO disease or an HPO phenotypic
+      abnormality. EHR codes in SNOMED CT or ICD-10-CM are kept in
+      source_codings alongside the harmonised concept.
+    include:
+      - reachable_from:
+          source_ontology: obo:mondo
+          source_nodes:
+            - MONDO:0700096  # human disease
+          relationship_types:
+            - rdfs:subClassOf
+      - reachable_from:
+          source_ontology: obo:hp
+          source_nodes:
+            - HP:0000118  # Phenotypic abnormality
+          relationship_types:
+            - rdfs:subClassOf
+
+  AnatomyTerm:
+    description: Anatomical entities from UBERON.
+    reachable_from:
+      source_ontology: obo:uberon
+      source_nodes:
+        - UBERON:0001062  # anatomical entity
+      relationship_types:
+        - rdfs:subClassOf
+
+
+
+
+
+
+
+
+
+  ZygosityTerm:
+    description: Zygosity terms from GENO.
+    reachable_from:
+      source_ontology: obo:geno
+      source_nodes:
+        - GENO:0000133  # zygosity
+      relationship_types:
+        - rdfs:subClassOf
+      include_self: false
+
+  VariantTypeTerm:
+    description: Variant types from the Sequence Ontology.
+    reachable_from:
+      source_ontology: obo:so
+      source_nodes:
+        - SO:0001060  # sequence_variant
+      relationship_types:
+        - rdfs:subClassOf
+
+
+# ---------------------------------------------------------------------------
+# Static enumerations
+# ---------------------------------------------------------------------------
+
+  RegistryPlatformEnum:
+    description: Registry platforms listed in the RAPID TA1 data inventory.
+    permissible_values:
+      MATRIX:
+        description: Registries hosted on the Matrix platform.
+      NORD:
+        description: Registries run through NORD (National Organization for Rare Disorders).
+      GLOBAL_GENES:
+        description: Registries run through Global Genes.
+      OTHER:
+
+  OrganizationTypeEnum:
+    permissible_values:
+      CLINIC:
+      HOSPITAL:
+      LABORATORY:
+      BIOBANK:
+      PATIENT_ADVOCACY_ORGANIZATION:
+      REGISTRY_OPERATOR:
+      ACADEMIC_INSTITUTION:
+      OTHER:
+
+  DataProvenanceEnum:
+    description: How a piece of data reached the registry.
+    permissible_values:
+      SELF_REPORTED:
+        description: Entered by the patient, caregiver or other respondent.
+        title: Self-Report
+        meaning: NCIT:C74528  # Self-Report
+      MANUALLY_ENTERED_HEALTH_INFORMATION:
+        description: >-
+          Health information entered by hand to supplement the EHR
+          ("Health Information" in the inventory).
+      EHR_ABSTRACTED:
+        description: >-
+          Patient-mediated EHR data that has been abstracted into structured
+          form ("Abstracted EHR" in the inventory).
+      EHR_RAW:
+        description: Raw EHR data as received, e.g. FHIR or C-CDA ("Raw EHR").
+        title: Electronic Health Record
+        meaning: NCIT:C142529  # Electronic Health Record
+      CURATOR_ABSTRACTED:
+        description: Abstracted or curated from source documents by a registry curator.
+      CLINICIAN_REPORTED:
+        description: Entered by a clinician.
+      DEVICE_GENERATED:
+        description: Produced by a digital health technology or recording device.
+      DERIVED:
+        description: Computed from other data.
+      UNKNOWN:
+
+  ReporterRoleEnum:
+    description: >-
+      Who completed or supplied the data. The inventory lists clinician,
+      researcher, patient, caregiver and third-party observer as respondents.
+    permissible_values:
+      PATIENT:
+        title: Patient
+        meaning: NCIT:C16960  # Patient
+      CAREGIVER:
+        title: Caregiver
+        meaning: NCIT:C17445  # Caregiver
+      PARENT:
+        title: Parent
+        meaning: NCIT:C42709  # Parent
+      LEGAL_GUARDIAN:
+        title: Guardian
+        meaning: NCIT:C51828  # Guardian
+      CLINICIAN:
+        title: Clinician
+        meaning: NCIT:C85499  # Clinician
+      RESEARCHER:
+      CURATOR:
+      THIRD_PARTY_OBSERVER:
+        description: An observer other than the patient, caregiver or clinician, e.g. a teacher.
+      OTHER:
+
+  DataCategoryEnum:
+    description: The data types in the RAPID TA1 Registries & Data Inventory.
+    permissible_values:
+      STANDARD_INSTRUMENT:
+      CUSTOM_SURVEY_FORM:
+      HEALTH_INFORMATION:
+      ABSTRACTED_EHR:
+      RAW_EHR:
+      DIGITAL_HEALTH_TECHNOLOGY:
+      GENETIC_TEST_CURATED:
+      GENETIC_TEST_RAW:
+      GENERAL_INFORMATION:
+      DIARY:
+      EEG:
+      EKG:
+      RETINAL_ERG:
+      DOCUMENT:
+      CONSENT:
+      BIOSPECIMEN:
+      PEDIGREE:
+      JOURNAL:
+      CARE_TEAM:
+      GENOMIC:
+      MORTALITY:
+      ADDRESS:
+      DIAGNOSIS:
+      MEDICATION:
+      VOICE:
+      IMAGE:
+      VIDEO:
+
+  FileFormatEnum:
+    description: File formats, bound to EDAM where EDAM has a term.
+    permissible_values:
+      PDF:
+        title: PDF
+        meaning: EDAM:format_3508
+      DOCX:
+        title: docx
+        meaning: EDAM:format_3506
+      CSV:
+        title: CSV
+        meaning: EDAM:format_3752
+      TSV:
+        title: TSV
+        meaning: EDAM:format_3475
+      JSON:
+        title: JSON
+        meaning: EDAM:format_3464
+      XML:
+        title: XML
+        meaning: EDAM:format_2332
+      TXT:
+        title: plain text format (unformatted)
+        meaning: EDAM:format_1964
+      FHIR_JSON:
+        description: HL7 FHIR resources serialised as JSON.
+      CCDA:
+        description: HL7 Consolidated Clinical Document Architecture (XML).
+      EDF:
+        description: European Data Format, for EEG and other biosignals. No EDAM term.
+      DICOM:
+        title: DICOM format
+        meaning: EDAM:format_3548
+      JPEG:
+        title: JPG
+        meaning: EDAM:format_3579
+      PNG:
+        title: PNG
+        meaning: EDAM:format_3603
+      TIFF:
+        title: TIFF
+        meaning: EDAM:format_3591
+      MP4:
+        title: MPEG-4
+        meaning: EDAM:format_3997
+      WAV:
+        description: Waveform audio. No EDAM term.
+      BAM:
+        title: BAM
+        meaning: EDAM:format_2572
+      CRAM:
+        title: CRAM
+        meaning: EDAM:format_3462
+      VCF:
+        title: VCF
+        meaning: EDAM:format_3016
+      FASTQ:
+        title: FASTQ
+        meaning: EDAM:format_1930
+      OTHER:
+
+  DataUseEnum:
+    description: Data use permissions from the Data Use Ontology (DUO), as in BDCHM.
+    permissible_values:
+      GRU:
+        description: General research use.
+        title: general research use
+        meaning: DUO:0000042
+      HMB:
+        description: Health/medical/biomedical research.
+        title: health or medical or biomedical research
+        meaning: DUO:0000006
+      DS:
+        description: Disease-specific research; pair with disease_restriction.
+        title: disease specific research
+        meaning: DUO:0000007
+      NPUNCU:
+        description: Not-for-profit, non-commercial use only.
+        title: not for profit, non commercial use only
+        meaning: DUO:0000018
+      IRB:
+        description: Ethics approval required.
+        title: ethics approval required
+        meaning: DUO:0000021
+
+  ConsentTypeEnum:
+    permissible_values:
+      INFORMED_CONSENT:
+        title: Informed Consent
+        meaning: NCIT:C16735  # Informed Consent
+      ASSENT:
+        description: Agreement by a minor or adult lacking capacity.
+        title: Assent
+        meaning: NCIT:C62281  # Assent
+      PARENTAL_PERMISSION:
+      LEGALLY_AUTHORIZED_REPRESENTATIVE_CONSENT:
+      RECONTACT_CONSENT:
+
+  ConsentStatusEnum:
+    permissible_values:
+      ACTIVE:
+      WITHDRAWN:
+      EXPIRED:
+      PENDING:
+
+  # The next five value sets are copied from BDCHM so that data harmonised to
+  # either model shares codes.
+
+  SexEnum:
+    description: Sex, as OMOP concepts (copied from BDCHM SexEnum).
+    permissible_values:
+      MALE:
+        meaning: OMOP:8507
+      FEMALE:
+        meaning: OMOP:8532
+      UNKNOWN:
+        meaning: OMOP:45877986
+
+  RaceEnum:
+    description: US OMB race categories as OMOP concepts (copied from BDCHM RaceEnum).
+    permissible_values:
+      AMERICAN_INDIAN_OR_ALASKA_NATIVE:
+        meaning: OMOP:8657
+      ASIAN:
+        meaning: OMOP:8515
+      BLACK_OR_AFRICAN_AMERICAN:
+        meaning: OMOP:8516
+      MIDDLE_EASTERN_OR_NORTH_AFRICAN:
+        meaning: OMOP:38003615
+      NATIVE_HAWAIIAN_OR_OTHER_PACIFIC_ISLANDER:
+        meaning: OMOP:8557
+      WHITE:
+        meaning: OMOP:8527
+      MORE_THAN_ONE_RACE:
+        meaning: OMOP:45880900
+      UNKNOWN:
+        meaning: OMOP:45877986
+
+  EthnicityEnum:
+    description: US OMB ethnicity categories as OMOP concepts (copied from BDCHM EthnicityEnum).
+    permissible_values:
+      HISPANIC_OR_LATINO:
+        meaning: OMOP:38003563
+      NOT_HISPANIC_OR_LATINO:
+        meaning: OMOP:38003564
+      UNKNOWN:
+        meaning: OMOP:45877986
+
+  VitalStatusEnum:
+    description: Vital status as OMOP concepts (copied from BDCHM VitalStatusEnum).
+    permissible_values:
+      ALIVE:
+        meaning: OMOP:4230556
+      DEAD:
+        meaning: OMOP:434489
+      UNKNOWN:
+
+  ConditionSeverityEnum:
+    description: Severity as OMOP concepts (copied from BDCHM ConditionSeverityEnum).
+    permissible_values:
+      MILD:
+        meaning: OMOP:4116992
+      MODERATE:
+        meaning: OMOP:4285732
+      SEVERE:
+        meaning: OMOP:4087703
+
+  FamilyRelationshipEnum:
+    description: >-
+      Relationship of a relative to the participant. The OMOP-coded values are
+      copied from BDCHM FamilyRelationshipEnum; the rest have no OMOP code in
+      that value set and are left unbound.
+    permissible_values:
+      SELF:
+        meaning: OMOP:45884467
+      NATURAL_PARENT:
+        meaning: OMOP:4029630
+      NATURAL_FATHER:
+        meaning: OMOP:4321888
+      NATURAL_MOTHER:
+        meaning: OMOP:4277283
+      NATURAL_SIBLING:
+        meaning: OMOP:4218412
+      NATURAL_BROTHER:
+        meaning: OMOP:4263682
+      NATURAL_SISTER:
+        meaning: OMOP:4251326
+      NATURAL_CHILD:
+        meaning: OMOP:4326600
+      BLOOD_RELATIVE:
+        meaning: OMOP:4053608
+      HALF_SIBLING:
+      TWIN:
+      GRANDPARENT:
+      AUNT_OR_UNCLE:
+      COUSIN:
+      SPOUSE_OR_PARTNER:
+      NON_BIOLOGICAL_PARENT:
+      OTHER:
+
+  FamilyTypeEnum:
+    permissible_values:
+      PROBAND_ONLY:
+      DUO:
+      TRIO:
+      QUAD:
+      NUCLEAR_FAMILY:
+      EXTENDED_FAMILY:
+      OTHER:
+
+  AffectedStatusEnum:
+    permissible_values:
+      AFFECTED:
+      UNAFFECTED:
+      UNKNOWN:
+
+  CareTeamRoleEnum:
+    permissible_values:
+      PRIMARY_CARE_PHYSICIAN:
+      SPECIALIST_PHYSICIAN:
+      GENETIC_COUNSELOR:
+      NURSE:
+      THERAPIST:
+      CARE_COORDINATOR:
+      OTHER:
+
+  EncounterClassEnum:
+    permissible_values:
+      INPATIENT:
+      OUTPATIENT:
+      EMERGENCY:
+      TELEHEALTH:
+      HOME_HEALTH:
+      OTHER:
+
+  AddressUseEnum:
+    permissible_values:
+      HOME:
+      TEMPORARY:
+      PREVIOUS:
+
+  ClinicalStatusEnum:
+    description: Clinical status, following FHIR Condition.clinicalStatus.
+    permissible_values:
+      ACTIVE:
+      RECURRENCE:
+      RELAPSE:
+      INACTIVE:
+      REMISSION:
+      RESOLVED:
+      UNKNOWN:
+
+  DiagnosisStatusEnum:
+    permissible_values:
+      CONFIRMED:
+      PROVISIONAL:
+      SUSPECTED:
+      RULED_OUT:
+      UNDIAGNOSED:
+        description: Participant is in the registry without a diagnosis (diagnostic odyssey).
+
+  DiagnosisBasisEnum:
+    permissible_values:
+      CLINICAL:
+      MOLECULAR_GENETIC:
+      BIOCHEMICAL:
+      HISTOPATHOLOGICAL:
+      IMAGING:
+      SELF_REPORTED:
+
+  MeasurementCategoryEnum:
+    permissible_values:
+      LABORATORY:
+      VITAL_SIGN:
+      ANTHROPOMETRIC:
+      DEVICE:
+      OTHER:
+
+  InterpretationEnum:
+    permissible_values:
+      NORMAL:
+      LOW:
+      HIGH:
+      CRITICAL_LOW:
+      CRITICAL_HIGH:
+      ABNORMAL:
+
+  QuantityComparatorEnum:
+    permissible_values:
+      LT:
+        description: Less than.
+      LE:
+        description: Less than or equal to.
+      GE:
+        description: Greater than or equal to.
+      GT:
+        description: Greater than.
+
+  InstrumentTypeEnum:
+    permissible_values:
+      STANDARD_INSTRUMENT:
+        description: A published, validated instrument (e.g. a PRO measure).
+      CUSTOM_SURVEY_FORM:
+        description: A survey or form designed by the registry.
+
+  AnswerTypeEnum:
+    permissible_values:
+      STRING:
+      INTEGER:
+      DECIMAL:
+      BOOLEAN:
+      DATE:
+      CHOICE:
+      MULTIPLE_CHOICE:
+
+  CompletionStatusEnum:
+    permissible_values:
+      COMPLETED:
+      IN_PROGRESS:
+      AMENDED:
+      STOPPED:
+
+  DiaryEntryKindEnum:
+    permissible_values:
+      SYMPTOM:
+      ACTIVITY:
+      SEIZURE:
+      SLEEP:
+      DIET:
+      OTHER:
+
+  TranscriptionMethodEnum:
+    permissible_values:
+      SPEECH_TO_TEXT:
+      TYPED:
+      MANUAL_TRANSCRIPTION:
+
+  DeviceTypeEnum:
+    permissible_values:
+      ACTIVITY_MONITOR:
+        title: Activity Monitor
+        meaning: NCIT:C156897  # Activity Monitor
+      SMARTWATCH:
+      CONTINUOUS_GLUCOSE_MONITOR:
+      PULSE_OXIMETER:
+      HOME_EEG:
+      SMARTPHONE_APP:
+      OTHER:
+
+  SummaryStatisticEnum:
+    permissible_values:
+      MEAN:
+      MEDIAN:
+      MINIMUM:
+      MAXIMUM:
+      SUM:
+      COUNT:
+
+  GeneticTestTypeEnum:
+    permissible_values:
+      WHOLE_GENOME_SEQUENCING:
+        title: Whole Genome Sequencing
+        meaning: NCIT:C101294
+      WHOLE_EXOME_SEQUENCING:
+        title: Whole Exome Sequencing
+        meaning: NCIT:C101295
+      MULTI_GENE_PANEL:
+        title: Multi-gene Panel Sequencing
+        meaning: NCIT:C198412  # Multi-gene Panel Sequencing
+      SINGLE_GENE_TEST:
+      TARGETED_VARIANT_TEST:
+      CHROMOSOMAL_MICROARRAY:
+      KARYOTYPE:
+      MITOCHONDRIAL_GENOME_SEQUENCING:
+      METHYLATION_ANALYSIS:
+      RNA_SEQUENCING:
+      OTHER:
+
+  GeneticTestResultEnum:
+    permissible_values:
+      POSITIVE:
+        description: A causative or likely causative finding was reported.
+      NEGATIVE:
+      INCONCLUSIVE:
+        description: Only variants of uncertain significance were reported.
+      PENDING:
+
+  ReferenceGenomeEnum:
+    permissible_values:
+      GRCh37:
+      GRCh38:
+      T2T_CHM13:
+
+  AlleleOriginEnum:
+    permissible_values:
+      GERMLINE:
+      DE_NOVO:
+      MATERNAL:
+      PATERNAL:
+      SOMATIC:
+      UNKNOWN:
+
+  ACMGClassificationEnum:
+    description: ACMG/AMP five-tier variant classification, bound to NCIT.
+    permissible_values:
+      PATHOGENIC:
+        title: Pathogenic Variant
+        meaning: NCIT:C168799
+      LIKELY_PATHOGENIC:
+        title: Likely Pathogenic Variant
+        meaning: NCIT:C168800
+      UNCERTAIN_SIGNIFICANCE:
+        title: Variant of Unknown Significance
+        meaning: NCIT:C94187
+      LIKELY_BENIGN:
+        title: Variant Likely Benign
+        meaning: NCIT:C168801
+      BENIGN:
+        title: Variant Benign
+        meaning: NCIT:C168802
+
+  PhysiologicalSignalModalityEnum:
+    permissible_values:
+      EEG:
+        title: Electroencephalography
+        meaning: NCIT:C38054  # Electroencephalography
+      ECG:
+        title: Electrocardiography
+        meaning: NCIT:C38053  # Electrocardiography
+      ERG:
+        description: Electroretinography.
+      OTHER:
+
+  MediaTypeEnum:
+    permissible_values:
+      IMAGE:
+      VIDEO:
+      AUDIO:
+
+  MediaContentEnum:
+    description: What a media file shows, from the inventory's open questions.
+    permissible_values:
+      FACIAL_PHOTOGRAPH:
+      CLINICAL_PHOTOGRAPH:
+      MEDICAL_IMAGING:
+      RETINAL_IMAGE:
+      GAIT_VIDEO:
+      SEIZURE_VIDEO:
+      VOICE_SAMPLE:
+      OTHER:
+
+  DeidentificationStatusEnum:
+    permissible_values:
+      IDENTIFIED:
+      DEIDENTIFIED:
+      LIMITED_DATA_SET:
+      NOT_ASSESSED:
+
+  SpecimenTypeEnum:
+    permissible_values:
+      WHOLE_BLOOD:
+      SALIVA:
+      BUCCAL_SWAB:
+      SKIN_BIOPSY:
+      FIBROBLAST_CELL_LINE:
+      TISSUE:
+      DNA:
+      RNA:
+      PLASMA:
+      SERUM:
+      URINE:
+      CEREBROSPINAL_FLUID:
+      OTHER:
+
+  DrugRouteEnum:
+    description: >-
+      Common routes of administration as OMOP concepts (a subset of BDCHM
+      DrugRouteEnum).
+    permissible_values:
+      ORAL:
+        meaning: OMOP:4132161
+      SUBCUTANEOUS:
+        meaning: OMOP:4142048
+      GASTROSTOMY:
+        meaning: OMOP:4132254
+      NASOGASTRIC:
+        meaning: OMOP:4132711
+      INTRADERMAL:
+        meaning: OMOP:4156706
+      INTRAVENOUS:
+        meaning: OMOP:4171047
+      INTRAMUSCULAR:
+        meaning: OMOP:4302612
+      INTRATHECAL:
+        meaning: OMOP:4217202
+      TOPICAL:
+        meaning: OMOP:4263689
+      TRANSDERMAL:
+        meaning: OMOP:4262099
+      NASAL:
+        meaning: OMOP:4262914
+      OPHTHALMIC:
+        meaning: OMOP:4184451
+      RECTAL:
+        meaning: OMOP:4290759
+      SUBLINGUAL:
+        meaning: OMOP:4292110
+      RESPIRATORY_TRACT:
+        meaning: OMOP:40486069
+      OTHER:

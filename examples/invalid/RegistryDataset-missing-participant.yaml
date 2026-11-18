@@ -1,0 +1,6 @@
+# Invalid: a PhenotypicFeature must name the participant it describes.
+phenotypic_features:
+  - id: rapid:phenotype/0001
+    phenotype:
+      id: HP:0001250
+      label: Seizure

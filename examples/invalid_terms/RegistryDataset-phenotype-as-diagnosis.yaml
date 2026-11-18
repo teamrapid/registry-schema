@@ -1,0 +1,8 @@
+# Passes linkml-validate but fails linkml-term-validator: a Diagnosis must be a
+# MONDO human disease, and HP:0001250 (Seizure) is an HPO phenotype.
+diagnoses:
+  - id: rapid:diagnosis/0001
+    participant: rapid:participant/0001
+    condition_concept:
+      id: HP:0001250
+      label: Seizure

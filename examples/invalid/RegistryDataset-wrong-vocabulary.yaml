@@ -1,0 +1,7 @@
+# Invalid: a medication must be coded in RxNorm, not MONDO.
+drug_exposures:
+  - id: rapid:drug/0001
+    participant: rapid:participant/0001
+    drug_concept:
+      id: MONDO:0010726
+      label: Rett syndrome

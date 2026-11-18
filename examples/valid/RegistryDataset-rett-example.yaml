@@ -1,0 +1,182 @@
+# Synthetic example. The participant is invented; the codes are real and were
+# checked against MONDO/HPO/SO/GENO (OLS), LOINC and UCUM (NLM Clinical Table
+# Search Service), RxNorm (RxNav) and HGNC (genenames.org).
+registries:
+  - id: rapid:registry/example-rett
+    name: Example Rett Syndrome Registry
+    registry_platform: MATRIX
+    disease_focus:
+      - id: MONDO:0010726
+        label: Rett syndrome
+organizations:
+  - id: rapid:org/example-genetics-lab
+    name: Example Clinical Genetics Laboratory
+    organization_type: LABORATORY
+persons:
+  - id: rapid:person/0001
+    year_of_birth: 2016
+    vital_status: ALIVE
+  - id: rapid:person/0002
+    vital_status: ALIVE
+participants:
+  - id: rapid:participant/0001
+    associated_person: rapid:person/0001
+    registry: rapid:registry/example-rett
+    age_at_enrollment: 1460
+    index_event: date of birth
+    is_proband: true
+    affected_status: AFFECTED
+    consents:
+      - rapid:consent/0001
+  - id: rapid:participant/0002
+    associated_person: rapid:person/0002
+    registry: rapid:registry/example-rett
+    affected_status: UNAFFECTED
+demographics:
+  - id: rapid:demography/0001
+    participant: rapid:participant/0001
+    data_provenance: SELF_REPORTED
+    reported_by_role: PARENT
+    sex: FEMALE
+    race:
+      - WHITE
+    ethnicity: NOT_HISPANIC_OR_LATINO
+    primary_language: en
+addresses:
+  - id: rapid:address/0001
+    participant: rapid:participant/0001
+    data_provenance: SELF_REPORTED
+    reported_by_role: PARENT
+    country: US
+    postal_code: "275"
+    address_use: HOME
+consents:
+  - id: rapid:consent/0001
+    participant: rapid:participant/0001
+    consent_type: PARENTAL_PERMISSION
+    signed_by_role: PARENT
+    consent_status: ACTIVE
+    data_use_permission:
+      - HMB
+      - IRB
+    valid_from: "2020-03-01"
+families:
+  - id: rapid:family/0001
+    family_type: DUO
+    members:
+      - rapid:participant/0001
+      - rapid:participant/0002
+    probands:
+      - rapid:participant/0001
+family_relationships:
+  - id: rapid:relationship/0001
+    participant: rapid:participant/0001
+    relative: rapid:participant/0002
+    relationship: NATURAL_MOTHER
+diagnoses:
+  - id: rapid:diagnosis/0001
+    participant: rapid:participant/0001
+    data_provenance: EHR_ABSTRACTED
+    reported_by_role: CLINICIAN
+    condition_concept:
+      id: MONDO:0010726
+      label: Rett syndrome
+    diagnosis_status: CONFIRMED
+    diagnosis_basis:
+      - CLINICAL
+      - MOLECULAR_GENETIC
+    age_at_diagnosis: 1095
+    confirmed_by_genetic_test: rapid:genetic-test/0001
+phenotypic_features:
+  - id: rapid:phenotype/0001
+    participant: rapid:participant/0001
+    data_provenance: SELF_REPORTED
+    reported_by_role: PARENT
+    phenotype:
+      id: HP:0002376
+      label: Developmental regression
+    onset_category:
+      id: HP:0003593
+      label: Infantile onset
+  - id: rapid:phenotype/0002
+    participant: rapid:participant/0001
+    data_provenance: EHR_ABSTRACTED
+    phenotype:
+      id: HP:0001250
+      label: Seizure
+    onset_category:
+      id: HP:0011463
+      label: Childhood onset
+drug_exposures:
+  - id: rapid:drug/0001
+    participant: rapid:participant/0001
+    data_provenance: SELF_REPORTED
+    reported_by_role: CAREGIVER
+    drug_concept:
+      id: RXNORM:114477
+      label: levetiracetam
+    drug_name_as_reported: Keppra
+    route: ORAL
+    still_taking: true
+measurements:
+  - id: rapid:measurement/0001
+    participant: rapid:participant/0001
+    data_provenance: EHR_RAW
+    measurement_category: VITAL_SIGN
+    age_at_record: 2190
+    observation_type:
+      id: LOINC:29463-7
+      label: Body weight
+    value_quantity:
+      value_decimal: 18.4
+      unit:
+        id: UCUM:kg
+        label: kilogram
+genetic_tests:
+  - id: rapid:genetic-test/0001
+    participant: rapid:participant/0001
+    data_provenance: CURATOR_ABSTRACTED
+    reported_by_role: CURATOR
+    is_curated: true
+    test_type: SINGLE_GENE_TEST
+    performing_laboratory: rapid:org/example-genetics-lab
+    genes_tested:
+      - id: HGNC:6990
+        label: MECP2
+    overall_result: POSITIVE
+    report_file: rapid:document/0001
+    findings:
+      - gene:
+          id: HGNC:6990
+          label: MECP2
+        hgvs_c: "NM_004992.4:c.502C>T"
+        hgvs_p: "NP_004983.1:p.(Arg168Ter)"
+        variant_type:
+          id: SO:0001587
+          label: stop_gained
+        zygosity:
+          id: GENO:0000135
+          label: heterozygous
+        allele_origin: DE_NOVO
+        acmg_classification: PATHOGENIC
+        associated_condition:
+          id: MONDO:0010726
+          label: Rett syndrome
+documents:
+  - id: rapid:document/0001
+    participant: rapid:participant/0001
+    data_provenance: EHR_RAW
+    file_name: mecp2_report.pdf
+    file_format: PDF
+    data_category: GENETIC_TEST_RAW
+    deidentification_status: DEIDENTIFIED
+physiological_recordings:
+  - id: rapid:recording/0001
+    participant: rapid:participant/0001
+    data_provenance: DEVICE_GENERATED
+    file_name: eeg_0001.edf
+    file_format: EDF
+    data_category: EEG
+    modality: EEG
+    video_retained: false
+    deidentification_status: DEIDENTIFIED

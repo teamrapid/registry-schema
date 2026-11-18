@@ -1,0 +1,23 @@
+# Which OAK adapter linkml-term-validator uses for each CURIE prefix.
+# OBO ontologies are served by the EBI Ontology Lookup Service, so no large
+# local SQLite builds are needed. Prefixes mapped to "" are skipped: OAK has no
+# reliable adapter for LOINC, RxNorm, SNOMED CT, CVX, UCUM or HGNC, so codes in
+# those vocabularies need a separate check (see README).
+ontology_adapters:
+  MONDO: ols:mondo
+  HP: ols:hp
+  UBERON: ols:uberon
+  GENO: ols:geno
+  SO: ols:so
+  NCIT: ols:ncit
+  DUO: ols:duo
+  NCBITaxon: ols:ncbitaxon
+  EDAM: ""  # OLS returns the wrong label for EDAM IRIs; checked by hand
+  OMOP: ""
+  LOINC: ""
+  RXNORM: ""
+  SNOMEDCT: ""
+  CVX: ""
+  UCUM: ""
+  HGNC: ""
+  rapid: ""

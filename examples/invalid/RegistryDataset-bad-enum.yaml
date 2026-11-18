@@ -1,0 +1,9 @@
+# Invalid: sex must be a SexEnum value, and country an ISO 3166-1 alpha-2 code.
+demographics:
+  - id: rapid:demography/0001
+    participant: rapid:participant/0001
+    sex: F
+addresses:
+  - id: rapid:address/0001
+    participant: rapid:participant/0001
+    country: USA
