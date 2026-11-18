@@ -2016,7 +2016,11 @@ enums:
         exact_mappings: [SNOMEDCT:248152002]
       UNKNOWN:
         meaning: OMOP:45877986
-        exact_mappings: [SNOMEDCT:184115007]
+        comments:
+          - >-
+            RareLink maps this to SNOMEDCT:184115007 (patient sex unknown); that
+            code is not in the SNOMED CT US edition served by BioPortal, so the
+            mapping is left out.
 
   RaceEnum:
     description: US OMB race categories as OMOP concepts (copied from BDCHM RaceEnum).
@@ -2510,7 +2514,10 @@ enums:
       INTERSEX:
         exact_mappings: [SNOMEDCT:32570691000036108]
       UNKNOWN:
-        exact_mappings: [SNOMEDCT:184115007]
+        comments:
+          - >-
+            RareLink maps this to SNOMEDCT:184115007, which is not in the SNOMED
+            CT US edition served by BioPortal; mapping left out.
       NOT_RECORDED:
         exact_mappings: [SNOMEDCT:1220561009]
 

@@ -48,7 +48,7 @@ checker on any data that will be shared.
 | genes | HGNC | pattern + checker (genenames.org) |
 | units | UCUM | pattern + checker (NLM Clinical Tables) |
 | procedures, diary symptoms, allergens | SNOMED CT (symptoms may also be HPO) | pattern + checker (BioPortal) |
-| vaccines | CVX | pattern + checker (BioPortal) |
+| vaccines | CVX | pattern only (CVX is not in BioPortal) |
 | other disease codings (`Diagnosis.equivalent_codings`) | Orphanet, OMIM, ICD-10-CM, ICD-11 | checker for OMIM and ICD-10-CM (BioPortal) |
 
 Original EHR codes go in `source_codings` and are kept as received; they are
@@ -62,12 +62,12 @@ codes other models use. The `meaning` terms (DUO, NCIT, EDAM, OMOP) were
 looked up when they were written, and `linkml-term-validator validate-schema`
 re-checks the NCIT and DUO ones against OLS. The `exact_mappings` to SNOMED
 CT and LOINC answer codes were copied from RareLink 2.0.7 (see
-[rarelink-alignment.md](rarelink-alignment.md)) and still need checking; see
-the next section.
+[rarelink-alignment.md](rarelink-alignment.md)) and were checked through
+BioPortal; see the next section.
 
 ## BioPortal
 
-[BioPortal](https://bioportal.bioontology.org) hosts SNOMED CT, CVX,
+[BioPortal](https://bioportal.bioontology.org) hosts SNOMED CT,
 ICD-10-CM, OMIM, LOINC answer codes and many other vocabularies that are not
 in the OBO Foundry. `scripts/check_codes.py` uses its REST API
 (`data.bioontology.org`) for the vocabularies that have no free lookup service
@@ -94,16 +94,28 @@ This is unrelated to the BioPortal MCP servers (`ncbo/bioportal-mcp`,
 BioPortal interactively and have their own configuration; the checker here
 calls the REST API directly.
 
-**Current status:** the key saved for this project's cloud environment is
-rejected by BioPortal (HTTP 401), so SNOMED CT, CVX, OMIM, ICD-10-CM and
-LOINC answer codes are currently reported as `UNCHECKED`. `UNCHECKED` is not
-a failure; once a valid key is in place, re-run:
+**Key handling.** The checker sends `BIOPORTAL_API_KEY` as the `apikey` query
+parameter rather than the `Authorization` header. A Claude Code cloud
+session's proxy replaces any `Authorization` header with its saved network
+secret, so a header sent by the script would be overwritten if that secret is
+wrong. The query parameter is not touched.
+
+BioPortal's `/ontologies/{acronym}/classes/{iri}` endpoint returns 404 for
+SNOMED CT classes that exist, so the checker uses the search endpoint with
+`require_exact_match` and keeps the hit whose IRI is the code's own.
+
+CVX is not in BioPortal and has no lookup service, so CVX codes are always
+reported as `UNCHECKED`.
+
+**Result of the first full check (2026-11-18):** of the 69 SNOMED CT and
+LOINC codes copied from RareLink 2.0.7 into the schema's `exact_mappings`, 67
+resolved in BioPortal. One, `SNOMEDCT:184115007` (used for "sex unknown"), is
+not in the SNOMED CT US edition BioPortal serves, so it was removed from
+`SexEnum` and `SexAtBirthEnum` and a comment records why. Re-run with:
 
 ```bash
 uv run python scripts/check_codes.py --schema-mappings src/rapid_registry_schema/schema/rapid_registry.yaml
 ```
-
-to check the 69 SNOMED CT and LOINC codes in the schema's `exact_mappings`.
 
 ## Checker output
 

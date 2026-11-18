@@ -86,7 +86,8 @@ accepts is enforced in one of two ways:
 LOINC, RxNorm, SNOMED CT, CVX, HGNC and UCUM are not OBO ontologies, so the
 term validator cannot look them up. The schema's id patterns reject codes from
 the wrong vocabulary, and `scripts/check_codes.py` looks each code up (NLM
-Clinical Tables, RxNav, genenames.org, and BioPortal for SNOMED CT and CVX)
+Clinical Tables, RxNav, genenames.org, and BioPortal for SNOMED CT, OMIM,
+ICD-10-CM and LOINC answer codes)
 and compares its label. Details in [docs/terminology.md](docs/terminology.md).
 
 Static enumerations bind their values with `meaning`: DUO for data use, NCIT
@@ -155,8 +156,8 @@ Validate its ontology bindings (queries the EBI Ontology Lookup Service):
 uv run linkml-term-validator validate-data examples/valid/RegistryDataset-rett-example.yaml -s src/rapid_registry_schema/schema/rapid_registry.yaml -t RegistryDataset -c conf/oak_config.yaml
 ```
 
-Check LOINC, RxNorm, HGNC, UCUM, SNOMED CT and CVX codes against their sources
-(SNOMED CT and CVX need a BioPortal key; see docs/terminology.md):
+Check LOINC, RxNorm, HGNC, UCUM and SNOMED CT codes against their sources
+(SNOMED CT needs a BioPortal key in `BIOPORTAL_API_KEY`; see docs/terminology.md):
 
 ```bash
 uv run python scripts/check_codes.py examples/valid/RegistryDataset-rett-example.yaml

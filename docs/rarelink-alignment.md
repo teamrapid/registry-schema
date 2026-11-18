@@ -75,8 +75,9 @@ crosswalk.
 
 Where RAPID enumerations correspond to RD-CDM value sets, the RAPID value
 carries the RareLink code in `exact_mappings` (for example `ACMGClassificationEnum.PATHOGENIC`
-→ `LOINC:LA6668-3`). These codes are copied from RareLink's schema and have
-not yet been checked against SNOMED CT or LOINC; see
+→ `LOINC:LA6668-3`). These codes were copied from RareLink's schema and then
+checked in BioPortal: 67 of 69 resolve, and the one SNOMED CT code that does
+not (`SNOMEDCT:184115007`, "sex unknown", used twice) was removed; see
 [terminology.md](terminology.md#bioportal).
 
 ## What RAPID covers that RD-CDM does not

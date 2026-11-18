@@ -12,11 +12,12 @@ Lookup sources, in order:
 * RXNORM - NLM RxNav, then BioPortal
 * HGNC   - genenames.org REST API
 * UCUM   - NLM Clinical Table Search Service
-* SNOMEDCT, CVX, ICD10CM, OMIM - BioPortal only
+* SNOMEDCT, ICD10CM, OMIM - BioPortal only
+* CVX    - not in BioPortal and no lookup service; always UNCHECKED
 
-BioPortal needs an API key. Set BIOPORTAL_API_KEY, or in a Claude Code cloud
-session save it as a network secret for data.bioontology.org and the proxy
-adds it. Without a working key the BioPortal-only codes are reported as
+BioPortal needs an API key. Set BIOPORTAL_API_KEY (sent as the `apikey` query
+parameter), or in a Claude Code cloud session save it as a network secret for
+data.bioontology.org with header value `apikey token=<key>`. Without a working key the BioPortal-only codes are reported as
 UNCHECKED, which is not a failure.
 
     python scripts/check_codes.py examples/valid/*.yaml
@@ -46,7 +47,6 @@ BIOPORTAL = {
     "SNOMEDCT": ("SNOMEDCT", "http://purl.bioontology.org/ontology/SNOMEDCT/"),
     "RXNORM": ("RXNORM", "http://purl.bioontology.org/ontology/RXNORM/"),
     "LOINC": ("LOINC", "http://purl.bioontology.org/ontology/LNC/"),
-    "CVX": ("CVX", "http://purl.bioontology.org/ontology/CVX/"),
     "ICD10CM": ("ICD10CM", "http://purl.bioontology.org/ontology/ICD10CM/"),
     "OMIM": ("OMIM", "http://purl.bioontology.org/ontology/OMIM/"),
 }
@@ -82,14 +82,27 @@ def _get_json(url: str, headers: dict[str, str] | None = None):
 
 
 def bioportal(prefix: str, code: str) -> str | None:
+    """Look a code up with BioPortal's search endpoint.
+
+    The /classes/{iri} endpoint returns 404 for UMLS-derived ontologies such
+    as SNOMEDCT even when the class exists, so search for the exact code and
+    keep the hit whose IRI is the code's IRI.
+    """
+    if prefix not in BIOPORTAL:
+        raise Unreachable(f"{prefix} is not in BioPortal")
     acronym, base = BIOPORTAL[prefix]
-    iri = urllib.parse.quote(base + code, safe="")
-    headers = {}
+    params = {"q": code, "ontologies": acronym, "require_exact_match": "true",
+              "include": "prefLabel", "display_links": "false", "display_context": "false"}
     key = os.environ.get("BIOPORTAL_API_KEY")
     if key:
-        headers["Authorization"] = f"apikey token={key}"
-    d = _get_json(f"https://data.bioontology.org/ontologies/{acronym}/classes/{iri}", headers)
-    return d.get("prefLabel") if d else None
+        # Sent as a query parameter rather than the Authorization header, so a
+        # proxy that injects its own Authorization header cannot override it.
+        params["apikey"] = key
+    d = _get_json("https://data.bioontology.org/search?" + urllib.parse.urlencode(params))
+    for hit in (d or {}).get("collection", []):
+        if hit.get("@id") == base + code:
+            return hit.get("prefLabel")
+    return None
 
 
 def loinc(code: str) -> tuple[str | None, str]:
