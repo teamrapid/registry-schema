@@ -116,6 +116,14 @@ family_relationships:
     participant: rapid:participant/0001
     relative: rapid:participant/0002
     relationship: NATURAL_MOTHER
+conditions:
+  - id: rapid:condition/0001
+    participant: rapid:participant/0001
+    data_provenance: EHR_ABSTRACTED
+    condition_concept:
+      id: ICD10CM:G40.909
+      label: Epilepsy, unspecified, not intractable, without status epilepticus
+    clinical_status: ACTIVE
 diagnoses:
   - id: rapid:diagnosis/0001
     participant: rapid:participant/0001
@@ -164,6 +172,12 @@ drug_exposures:
     drug_name_as_reported: Keppra
     route: ORAL
     still_taking: true
+  - id: rapid:drug/0002
+    participant: rapid:participant/0001
+    data_provenance: SELF_REPORTED
+    reported_by_role: CAREGIVER
+    drug_name_as_reported: magnesium glycinate (store brand)
+    is_supplement: true
 measurements:
   - id: rapid:measurement/0001
     participant: rapid:participant/0001

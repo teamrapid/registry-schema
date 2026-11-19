@@ -1,0 +1,5 @@
+# Invalid: a medication needs an RxNorm code, the source's wording, or both.
+drug_exposures:
+  - id: rapid:drug/0001
+    participant: rapid:participant/0001
+    still_taking: true

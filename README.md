@@ -130,9 +130,14 @@ Every `meaning` was checked against the ontology when written, and
 
 ## Decisions on the inventory's open points
 
-- **Medications** are marked "RxNorm?" in the inventory. A harmonised
-  `DrugExposure` must carry an RxNorm code; a medication that cannot yet be
-  coded is held back, with the source wording in `drug_name_as_reported`.
+- **Medications** are marked "RxNorm?" in the inventory. RxNorm is used where
+  feasible; a medication that cannot be coded is kept with the source's own
+  wording in `drug_name_as_reported`. A record needs one or the other.
+- **Conditions** are preferably MONDO or HPO, but ICD-10-CM and SNOMED CT
+  codes are accepted as sent. **Procedures** take SNOMED CT or CPT.
+- **Registries are not expected to standardise their own data.**
+  Harmonisation to these vocabularies happens at intake; the hope is that
+  the bindings are gradually adopted upstream.
 - **Genomic** standards are marked "?". Genomic files are BAM, CRAM, VCF or
   FASTQ, and BAM, CRAM and VCF files must state their reference genome (a
   schema rule enforces this).

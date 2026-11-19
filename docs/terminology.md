@@ -36,7 +36,9 @@ checker on any data that will be shared.
 | Slot | Vocabulary | Checked by |
 |---|---|---|
 | `Diagnosis.condition_concept`, `Registry.disease_focus`, `GeneticFinding.associated_condition`, `Consent.disease_restriction` | MONDO, under `MONDO:0700096` | term validator |
-| `Condition.condition_concept`, cause of death, family-history conditions | MONDO or HPO | term validator |
+| `Condition.condition_concept` | MONDO or HPO preferred; ICD-10-CM or SNOMED CT accepted | pattern + checker (OLS, BioPortal) |
+| cause of death | MONDO | term validator |
+| family-history conditions | MONDO or HPO | term validator |
 | `PhenotypicFeature.phenotype` | HPO, under `HP:0000118` | term validator |
 | onset, severity, temporal pattern, modifiers | HPO, under `HP:0003674`, `HP:0012824`, `HP:0011008`, `HP:0012823` | term validator |
 | body sites | UBERON, under `UBERON:0001062` | term validator |
@@ -48,7 +50,10 @@ checker on any data that will be shared.
 | medications and supplements | RxNorm | pattern + checker (RxNav) |
 | genes | HGNC | pattern + checker (genenames.org) |
 | units | UCUM | pattern + checker (NLM Clinical Tables) |
-| procedures, diary symptoms, allergens | SNOMED CT (symptoms may also be HPO) | pattern + checker (BioPortal) |
+| procedures | SNOMED CT or CPT | pattern + checker (BioPortal for SNOMED CT; CPT format only) |
+| diary symptoms, allergens | SNOMED CT (symptoms may also be HPO) | pattern + checker (BioPortal) |
+| family relationships | OMOP concepts, mapped to the GA4GH Kinship Ontology (KIN) | fixed value set |
+| document type | LOINC Document Ontology (FHIR DocumentReference.type) | pattern + checker |
 | vaccines | CVX | pattern only (CVX is not in BioPortal) |
 | other disease codings (`Diagnosis.equivalent_codings`) | Orphanet, OMIM, ICD-10-CM, ICD-11 | checker for OMIM and ICD-10-CM (BioPortal) |
 
@@ -63,6 +68,18 @@ from the Monarch Initiative, identifies the *trait* being measured, so
 `measured_attribute: OBA:VT0001259` (body mass) lets results from different
 tests of the same trait be grouped. BDCHM uses OBA the same way. The slot is
 optional and sits beside the LOINC code, not instead of it.
+
+### Why `Condition.condition_concept` has no binding
+
+`linkml-term-validator` checks every binding as if it were required,
+whatever its `obligation_level` says. A binding to MONDO/HPO would therefore
+reject the ICD-10-CM and SNOMED CT codes this slot accepts. The slot instead
+relies on its id pattern plus `scripts/check_codes.py`, which looks up all
+four vocabularies (MONDO and HPO in OLS, ICD-10-CM and SNOMED CT in
+BioPortal). `Diagnosis` keeps a required MONDO binding.
+
+CPT is licensed by the AMA and BioPortal holds only a summary of it, so CPT
+codes are format-checked only.
 
 ## Fixed value sets
 

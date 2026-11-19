@@ -13,7 +13,9 @@ Lookup sources, in order:
 * HGNC   - genenames.org REST API
 * UCUM   - NLM Clinical Table Search Service
 * SNOMEDCT, ICD10CM, OMIM - BioPortal only
+* MONDO, HP - EBI Ontology Lookup Service
 * CVX    - not in BioPortal and no lookup service; always UNCHECKED
+* CPT    - licensed by the AMA; BioPortal holds only a summary; always UNCHECKED
 
 BioPortal needs an API key. Set BIOPORTAL_API_KEY (sent as the `apikey` query
 parameter), or in a Claude Code cloud session save it as a network secret for
@@ -40,7 +42,12 @@ from pathlib import Path
 
 import yaml
 
-CHECKED_PREFIXES = {"LOINC", "RXNORM", "SNOMEDCT", "CVX", "HGNC", "UCUM", "ICD10CM", "OMIM"}
+CHECKED_PREFIXES = {"LOINC", "RXNORM", "SNOMEDCT", "CVX", "HGNC", "UCUM", "ICD10CM", "OMIM", "CPT", "MONDO", "HP"}
+
+# OBO ontologies looked up in the EBI Ontology Lookup Service. These are also
+# checked by linkml-term-validator where a slot has a binding; this covers the
+# slots that accept several vocabularies and so carry no binding.
+OLS = {"MONDO": "mondo", "HP": "hp"}
 
 # BioPortal acronym and class-IRI base for each prefix (UMLS-derived ontologies).
 BIOPORTAL = {
@@ -138,8 +145,22 @@ def ucum(code: str) -> tuple[str | None, str]:
     return None, "NLM Clinical Tables"
 
 
+def ols(prefix: str, code: str) -> tuple[str | None, str]:
+    iri = f"http://purl.obolibrary.org/obo/{prefix}_{code}"
+    d = _get_json(f"https://www.ebi.ac.uk/ols4/api/ontologies/{OLS[prefix]}/terms?"
+                  + urllib.parse.urlencode({"iri": iri}))
+    terms = ((d or {}).get("_embedded") or {}).get("terms") or []
+    return (terms[0]["label"] if terms else None), "OLS"
+
+
 def lookup(curie: str) -> tuple[str | None, str]:
     prefix, code = curie.split(":", 1)
+    if prefix in OLS:
+        return ols(prefix, code)
+    if prefix == "CVX":
+        raise Unreachable("CVX has no lookup service")
+    if prefix == "CPT":
+        raise Unreachable("CPT is licensed; BioPortal holds only a summary")
     if prefix == "LOINC":
         return loinc(code)
     if prefix == "RXNORM":

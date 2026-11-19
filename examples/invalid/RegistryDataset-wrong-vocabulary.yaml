@@ -1,4 +1,4 @@
-# Invalid: a medication must be coded in RxNorm, not MONDO.
+# Invalid: a medication code must be RxNorm, not MONDO.
 drug_exposures:
   - id: rapid:drug/0001
     participant: rapid:participant/0001

@@ -70,6 +70,8 @@ prefixes:
   CVX: http://hl7.org/fhir/sid/cvx/
   HGNC: http://identifiers.org/hgnc/
   ICD10CM: https://icd.codes/icd10cm/
+  CPT: http://purl.bioontology.org/ontology/CPT/
+  KIN: http://purl.org/ga4gh/kin.owl#KIN_
   ICD11: "https://icd.who.int/browse/latest-release/foundation/en#"
   ORPHA: http://www.orpha.net/ORDO/Orphanet_
   OMIM: "https://omim.org/MIM:"
@@ -300,6 +302,25 @@ classes:
         description: The label the vocabulary assigns to the term.
       vocabulary_version:
         description: Release of the vocabulary the code was taken from, where known.
+
+  ConditionCodeConcept:
+    is_a: Concept
+    description: >-
+      A condition code: MONDO or HPO (preferred, ontology-checked), or SNOMED CT
+      or ICD-10-CM where the source system codes it that way.
+    slot_usage:
+      id:
+        pattern: "^(MONDO:[0-9]{7}|HP:[0-9]{7}|SNOMEDCT:[0-9]{6,18}|ICD10CM:[A-Z][0-9][0-9A-Z](\\.[0-9A-Z]{1,4})?)$"
+
+  ProcedureCodeConcept:
+    is_a: Concept
+    description: >-
+      A procedure code in SNOMED CT or CPT. CPT is licensed by the AMA and its
+      codes cannot be looked up through BioPortal, so CPT codes are only
+      format-checked.
+    slot_usage:
+      id:
+        pattern: "^(SNOMEDCT:[0-9]{6,18}|CPT:[0-9]{4}[0-9A-Z])$"
 
   SnomedCtConcept:
     is_a: Concept
@@ -974,13 +995,19 @@ classes:
       - omop_cdm:condition_occurrence
     attributes:
       condition_concept:
-        range: Concept
+        range: ConditionCodeConcept
         required: true
         inlined: true
-        bindings:
-          - binds_value_of: id
-            range: ConditionTerm
-            obligation_level: REQUIRED
+        description: >-
+          The condition, preferably as MONDO or HPO. A SNOMED CT or ICD-10-CM
+          code is accepted where it is how the source coded it; the original
+          code also goes in source_codings.
+        comments:
+          - >-
+            No bindings block here on purpose: linkml-term-validator treats any
+            binding as required, which would reject SNOMED CT and ICD-10-CM.
+            scripts/check_codes.py looks up all four vocabularies instead.
+            Diagnosis narrows this slot to a MONDO human disease.
       clinical_status:
         range: ClinicalStatusEnum
       severity:
@@ -1141,7 +1168,7 @@ classes:
       - omop_cdm:procedure_occurrence
     attributes:
       procedure_concept:
-        range: SnomedCtConcept
+        range: ProcedureCodeConcept
         required: true
         inlined: true
       body_site:
@@ -1163,19 +1190,26 @@ classes:
       - bdchm:DrugExposure
     close_mappings:
       - omop_cdm:drug_exposure
+    any_of:
+      - description: Coded to RxNorm.
+        slot_conditions:
+          drug_concept:
+            required: true
+      - description: Not yet coded; the source's wording is kept.
+        slot_conditions:
+          drug_name_as_reported:
+            required: true
     attributes:
       drug_concept:
         range: RxNormConcept
-        required: true
-        comments:
-          - >-
-            Required by design: a medication that cannot yet be coded to
-            RxNorm is held back until it is, with the source wording kept in
-            drug_name_as_reported.
         inlined: true
-        description: RxNorm ingredient or clinical drug where it can be coded.
+        description: >-
+          RxNorm ingredient or clinical drug, where it can be coded. A record
+          needs this, drug_name_as_reported, or both.
       drug_name_as_reported:
-        description: The name as the patient or source wrote it, before coding.
+        description: >-
+          The name exactly as the patient or source wrote it. Required when
+          the medication could not be coded to RxNorm.
       is_supplement:
         range: boolean
       dose:
@@ -1617,6 +1651,12 @@ classes:
       - omop_cdm:note
     attributes:
       document_type:
+        range: LoincConcept
+        inlined: true
+        description: >-
+          Kind of document, as FHIR DocumentReference.type codes it (the LOINC
+          Document Ontology), e.g. a discharge summary or a genetics report.
+        slot_uri: fhir:DocumentReference.type
 
   GenomicDataFile:
     is_a: DataFile
@@ -1780,9 +1820,10 @@ classes:
         multivalued: true
         inlined_as_list: true
         slot_uri: NCIT:C81239
+        description: Cause of death as a MONDO disease.
         bindings:
           - binds_value_of: id
-            range: ConditionTerm
+            range: DiseaseTerm
             obligation_level: REQUIRED
       cause_of_death_known:
         range: boolean
@@ -2320,35 +2361,53 @@ enums:
 
   FamilyRelationshipEnum:
     description: >-
-      Relationship of a relative to the participant. The OMOP-coded values are
-      copied from BDCHM FamilyRelationshipEnum; the rest have no OMOP code in
-      that value set and are left unbound.
+      Relationship of a relative to the participant, read "the relative is the
+      <value> of the participant". The OMOP-coded values are copied from BDCHM
+      FamilyRelationshipEnum. Mappings to the GA4GH Pedigree Standard's
+      Kinship Ontology (KIN, pre-alpha) use its directional relations, read the
+      same way: exact where the relation matches, broad where KIN does not
+      distinguish sex.
     permissible_values:
       SELF:
         meaning: OMOP:45884467
       NATURAL_PARENT:
         meaning: OMOP:4029630
+        exact_mappings: [KIN:003]
       NATURAL_FATHER:
         meaning: OMOP:4321888
+        exact_mappings: [KIN:028]
       NATURAL_MOTHER:
         meaning: OMOP:4277283
+        exact_mappings: [KIN:027]
       NATURAL_SIBLING:
         meaning: OMOP:4218412
+        exact_mappings: [KIN:007]
       NATURAL_BROTHER:
         meaning: OMOP:4263682
+        broad_mappings: [KIN:007]
       NATURAL_SISTER:
         meaning: OMOP:4251326
+        broad_mappings: [KIN:007]
       NATURAL_CHILD:
         meaning: OMOP:4326600
+        exact_mappings: [KIN:032]
       BLOOD_RELATIVE:
         meaning: OMOP:4053608
+        exact_mappings: [KIN:002]
       HALF_SIBLING:
+        exact_mappings: [KIN:012]
       TWIN:
+        exact_mappings: [KIN:009]
       GRANDPARENT:
+        exact_mappings: [KIN:017]
       AUNT_OR_UNCLE:
+        exact_mappings: [KIN:013]
       COUSIN:
+        exact_mappings: [KIN:014]
       SPOUSE_OR_PARTNER:
+        exact_mappings: [KIN:026]
       NON_BIOLOGICAL_PARENT:
+        exact_mappings: [KIN:020]
       OTHER:
 
   FamilyTypeEnum:

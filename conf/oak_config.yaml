@@ -31,3 +31,5 @@ ontology_adapters:
   rarelink: ""
   OBA: ols:oba
   valuesets: ""
+  CPT: ""
+  KIN: ""
